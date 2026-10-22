@@ -40,7 +40,9 @@ class GestionViewModel(app: Application) : AndroidViewModel(app) {
     fun avisos(lista: List<OportunidadEntity>, gestiones: List<SeguimientoEntity>, cierres: List<ResultadoEntity>): List<Pair<OportunidadEntity, String>> {
         val avisos = mutableListOf<Pair<OportunidadEntity, String>>()
         lista.filter { it.estado != "Oportunidad descartada" && cierres.none { r -> r.oportunidadId == it.id.toString() } }.forEach { o ->
-            val ultima = gestiones.firstOrNull { it.oportunidadId == o.id.toString() && it.tipo != "Cambio de estado" }
+            val ultima = gestiones
+                .filter { it.oportunidadId == o.id.toString() && it.tipo != "Cambio de estado" }
+                .maxWithOrNull(compareBy<SeguimientoEntity> { it.fecha }.thenBy { it.hora }.thenBy { it.id })
             if (Fechas.proxima(o.fechaInicio)) avisos.add(o to "Evento próximo: ${o.fechaInicio}")
             if (o.estado == "Evento identificado" || o.estado == "Contacto pendiente") avisos.add(o to "Contacto pendiente")
             if (o.estado == "Propuesta enviada" || o.estado == "En espera de respuesta") avisos.add(o to "Propuesta sin respuesta")

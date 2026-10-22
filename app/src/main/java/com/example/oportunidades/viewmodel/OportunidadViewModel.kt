@@ -2,6 +2,7 @@ package com.example.oportunidades.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.room.withTransaction
 import com.example.oportunidades.model.*
 import com.example.oportunidades.model.data.local.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -119,19 +120,20 @@ class OportunidadViewModel(app: Application) : AndroidViewModel(app) {
                     _mensaje.value = "Selecciona una organización registrada"; return@launch
                 }
 
-                val anterior = if (a.id == 0L) null else dao.obtener(a.id)
                 val registro = OportunidadEntity(id = a.id, nombre = a.nombre.trim(), tipo = a.tipo.trim(), descripcion = a.descripcion.trim(), fuente = a.fuente.trim(), fechaDeteccion = a.fechaDeteccion.trim(), responsable = a.responsable.trim(), prioridad = a.prioridad.trim(), potencial = a.potencial.trim(), estado = a.estado.trim(), organizacionId = a.organizacionId.trim(), fechaInicio = a.fechaInicio.trim(), fechaTermino = a.fechaTermino.trim(), horario = a.horario.trim(), comuna = a.comuna.trim(), region = a.region.trim(), ubicacion = a.ubicacion.trim(), publico = a.publico.trim(), asistentes = a.asistentes.trim(), condiciones = a.condiciones.trim(), requisitos = a.requisitos.trim(), costos = a.costos.trim(), espacios = a.espacios.trim(), observaciones = a.observaciones.trim(), actualizacion = Fechas.hoy() + " " + Fechas.hora())
-                val guardadoId = if (a.id == 0L) dao.insertar(registro) else {
-                    dao.modificar(a.id, registro.nombre, registro.tipo, registro.descripcion, registro.fuente, registro.fechaDeteccion, registro.responsable, registro.prioridad, registro.potencial, registro.estado, registro.organizacionId, registro.fechaInicio, registro.fechaTermino, registro.horario, registro.comuna, registro.region, registro.ubicacion, registro.publico, registro.asistentes, registro.condiciones, registro.requisitos, registro.costos, registro.espacios, registro.observaciones, registro.actualizacion); a.id
-                }
-
-                _estado.update { it.copy(id = guardadoId) }
-                if (anterior == null || anterior.estado != registro.estado) {
-                    db.seguimientoDao().insertar(SeguimientoEntity(
-                        oportunidadId = guardadoId.toString(), responsable = registro.responsable,
-                        tipo = "Cambio de estado", fecha = Fechas.hoy(), hora = Fechas.hora(),
-                        resultado = if (anterior == null) "Registro: ${registro.estado}" else "${anterior.estado} → ${registro.estado}"
-                    ))
+                val guardadoId = db.withTransaction {
+                    val anterior = if (a.id == 0L) null else dao.obtener(a.id)
+                    val id = if (a.id == 0L) dao.insertar(registro) else {
+                        dao.modificar(a.id, registro.nombre, registro.tipo, registro.descripcion, registro.fuente, registro.fechaDeteccion, registro.responsable, registro.prioridad, registro.potencial, registro.estado, registro.organizacionId, registro.fechaInicio, registro.fechaTermino, registro.horario, registro.comuna, registro.region, registro.ubicacion, registro.publico, registro.asistentes, registro.condiciones, registro.requisitos, registro.costos, registro.espacios, registro.observaciones, registro.actualizacion); a.id
+                    }
+                    if (anterior == null || anterior.estado != registro.estado) {
+                        db.seguimientoDao().insertar(SeguimientoEntity(
+                            oportunidadId = id.toString(), responsable = registro.responsable,
+                            tipo = "Cambio de estado", fecha = Fechas.hoy(), hora = Fechas.hora(),
+                            resultado = if (anterior == null) "Registro: ${registro.estado}" else "${anterior.estado} → ${registro.estado}"
+                        ))
+                    }
+                    id
                 }
 
                 _estado.update { it.copy(id = guardadoId) }
