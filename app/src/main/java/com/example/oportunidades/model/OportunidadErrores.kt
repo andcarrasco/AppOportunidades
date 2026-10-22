@@ -1,0 +1,26 @@
+package com.example.oportunidades.model
+data class OportunidadErrores(
+    val nombre: String? = null,
+    val tipo: String? = null,
+    val descripcion: String? = null,
+    val fuente: String? = null,
+    val fechaDeteccion: String? = null,
+    val responsable: String? = null,
+    val prioridad: String? = null,
+    val potencial: String? = null,
+    val estado: String? = null,
+    val organizacionId: String? = null,
+    val fechaInicio: String? = null,
+    val fechaTermino: String? = null,
+    val horario: String? = null,
+    val comuna: String? = null,
+    val region: String? = null,
+    val ubicacion: String? = null,
+    val publico: String? = null,
+    val asistentes: String? = null,
+    val condiciones: String? = null,
+    val requisitos: String? = null,
+    val costos: String? = null,
+    val espacios: String? = null,
+    val observaciones: String? = null
+)
