@@ -1,80 +1,64 @@
 # AppOportunidades
 
-Proyecto de Desarrollo de Aplicaciones Móviles, DSY1105, para la Evaluación Parcial 2.
+Aplicación Android para registrar oportunidades de eventos y activaciones corporativas y llevar un seguimiento de lo que se ha hecho en cada una. Corresponde al trabajo de la Evaluación Parcial 2 de Desarrollo de Aplicaciones Móviles, DSY1105.
 
 Integrantes: Andrés Carrasco y Pablo Rojas.
 
-La aplicación permite registrar oportunidades de eventos y activaciones, relacionarlas con organizaciones y llevar un seguimiento de las gestiones. Trabaja con datos ficticios y guarda la información en el mismo dispositivo.
+Toda la información usada para la demostración es ficticia. Los datos se guardan en el teléfono y no se comparten entre dispositivos.
 
-## Cómo ejecutar el proyecto
+## Qué se puede hacer
+
+- Registrar y editar organizaciones y sus contactos.
+- Crear oportunidades con los datos del evento, responsable, prioridad y estado.
+- Buscar oportunidades por nombre y filtrarlas por fecha, tipo, estado, organización, ubicación, prioridad o responsable.
+- Registrar gestiones, propuestas y próximas acciones, y consultar el historial de cada oportunidad.
+- Ver avisos de eventos próximos, contactos pendientes, propuestas sin respuesta y seguimientos atrasados.
+- Registrar el resultado de una activación con cantidades ficticias de asistentes, contactos e inscripciones.
+- Usar la cámara o elegir una imagen de la galería para el perfil.
+- Activar o desactivar los avisos desde el perfil y conservar esa preferencia.
+
+## Cómo ejecutar la app
 
 1. Abrir la carpeta del proyecto en Android Studio Quail 4.
-2. Esperar la sincronización de Gradle y usar el JDK integrado de Android Studio. Instalar Android SDK 37 si el programa lo solicita.
+2. Sincronizar Gradle usando el JDK incluido en Android Studio. Instalar el SDK 37 si se solicita.
 3. Conectar un teléfono o iniciar un emulador con Android 13 (API 33) o superior.
 4. Seleccionar el módulo `app` y presionar Run.
-5. Ingresar con el correo `ejecutivo@example.com` y la contraseña `Demo2026`.
+5. Ingresar con estos datos de prueba:
 
-La cuenta es de demostración. No se conecta a un servicio de autenticación y la sesión termina al cerrar el proceso de la aplicación.
+   - Correo: `ejecutivo@example.com`
+   - Contraseña: `Demo2026`
 
-## Recorrido de la aplicación
+El acceso es local, con una cuenta fija. Al cerrar el proceso de la aplicación hay que ingresar nuevamente.
 
-Primero se registra una organización desde Oportunidades, en la opción Organizaciones y contactos. Después se pueden agregar contactos ficticios y crear una oportunidad asociada a esa organización.
+## Primer recorrido
 
-La ficha de la oportunidad contiene también los datos del evento: fechas, horario, ubicación, público y condiciones de participación. Desde su detalle se puede editar, registrar una gestión, consultar el historial o ingresar el resultado de una activación.
+Desde Oportunidades, entrar a Organizaciones y contactos y registrar una organización. Después se puede agregar un contacto y crear una oportunidad asociada a esa organización.
 
-Para dejar constancia de una propuesta, se registra una gestión de tipo Envío de propuesta y se cambia el estado de la oportunidad a Propuesta enviada. No se envían correos ni mensajes reales.
+La ficha reúne la oportunidad y los datos del evento. Desde el detalle se puede editar, agregar una gestión, revisar el historial o registrar el resultado de la activación. Los cambios de estado también quedan en el historial.
 
-Las fechas se escriben como `AAAA-MM-DD`, las horas como `HH:mm` y los costos con punto decimal.
+Para registrar una propuesta, agregar una gestión de tipo Envío de propuesta y cambiar el estado de la oportunidad a Propuesta enviada. La app solo deja constancia de esa gestión; no envía correos ni mensajes.
 
-## Funciones implementadas
-
-- Inicio y cierre de sesión con una cuenta ficticia.
-- Registro, consulta y edición de organizaciones y contactos.
-- Registro y edición de oportunidades con prioridad, responsable y estado.
-- Búsqueda por nombre y filtros por fecha, tipo, estado, organización, comuna, región, prioridad y responsable.
-- Seguimientos con fecha, hora, resultado y próxima acción.
-- Historial de gestiones y cambios de estado por oportunidad.
-- Avisos internos de eventos próximos, contactos pendientes, propuestas sin respuesta y seguimientos pendientes o atrasados.
-- Registro de resultados ficticios de una activación.
-- Perfil con cámara y selección de imágenes desde la galería.
-- Preferencia para activar o desactivar los avisos, guardada con DataStore.
-- Mensajes de error por campo, confirmaciones de guardado y animaciones de estado.
+Las fechas se escriben como `AAAA-MM-DD`, las horas como `HH:mm` y los costos con punto decimal. Para probar cámara y galería, usar una imagen de un objeto o un emblema sin personas identificables.
 
 ## Organización del código
 
-Los formularios siguen el trabajo de la Guía 11: cada uno tiene un estado, un modelo de errores y un ViewModel. La pantalla muestra los datos y llama a las funciones `onCampoChange`. El ViewModel valida y guarda.
+Los formularios siguen la estructura trabajada en clases: la pantalla muestra los datos, el ViewModel maneja el estado y valida, y el DAO realiza las operaciones de la base de datos.
 
-- `model`: estados, errores, catálogos y manejo de fechas.
-- `model/data/local`: entidades, DAO y base de datos Room.
-- `viewmodel`: validaciones, estado de los formularios y lógica de consulta.
-- `navigation`: rutas, eventos y conexión entre pantallas, siguiendo las Guías 10 y 11.
-- `ui/screen`: pantallas con Scaffold y Column.
-- `ui/components`: campos, selectores, botones y confirmaciones reutilizables.
-- `ui/utils`: tamaños de ventana de la Guía 9.
-- `data`: preferencia de avisos de la Guía 12.
+- `model`: estados de los formularios, errores, catálogos y fechas.
+- `model/data/local`: entidades, DAO y base Room.
+- `viewmodel`: validaciones, guardado, filtros y avisos.
+- `navigation`: rutas y conexión entre pantallas.
+- `ui`: pantallas, componentes compartidos, tema y tamaños de ventana.
+- `data`: preferencia de avisos con DataStore.
 
-Room se basa en los archivos de persistencia entregados. Los listados y las consultas de edición se adaptaron al caso. Cámara y galería corresponden a la actividad de la Guía 13. Se mantiene la configuración del proyecto entregado y no se agregaron bibliotecas en este ajuste.
+Se tomaron como base los formularios y la navegación de las Guías 10 y 11, la persistencia con Room, los estados y animaciones de la Guía 12 y la actividad de cámara y galería de la Guía 13. Los campos y las consultas se adaptaron al caso de oportunidades.
 
-## Comprobaciones antes de entregar
+## Qué falta revisar
 
-1. Intentar guardar formularios vacíos y corregir los campos indicados.
-2. Registrar una organización, un contacto y una oportunidad. Editar el estado y consultar el historial.
-3. Registrar un seguimiento reciente y luego uno con fecha anterior. El aviso debe considerar el seguimiento más reciente por fecha y hora.
-4. Cerrar y volver a abrir la aplicación. Ingresar nuevamente y comprobar que los registros siguen disponibles.
-5. Desactivar los avisos y volver a abrir para comprobar que se conserva la preferencia.
-6. En un teléfono, probar cámara y galería, cancelar la selección y denegar el permiso de cámara. Usar imágenes de objetos o emblemas sin personas identificables.
-7. Revisar los formularios con el teclado abierto y comprobar que se puede llegar al botón Guardar.
+Hay pruebas de validación y de selección de la última gestión en `app/src/test`. La versión actual se revisó de forma estática, pero todavía falta compilarla, ejecutar las pruebas y comprobar el recorrido completo en un teléfono, incluidos permisos, captura y cancelación de imágenes.
 
-Las pruebas unitarias de validación y selección de la última gestión están en `app/src/test`. Este ajuste se revisó de forma estática; no se ha compilado ni se han ejecutado esas pruebas. También falta comprobar el recorrido completo, la cámara y la galería en un teléfono.
+También hay que comprobar que los registros sigan disponibles después de cerrar y abrir la app, y que se conserve la preferencia de avisos. La foto del perfil usa almacenamiento temporal y no tiene la misma persistencia que los datos guardados en Room.
 
-## Alcance y pendientes
+El historial se consulta por oportunidad. El contacto de una gestión se puede indicar en sus observaciones; no hay un historial separado por contacto. El público esperado y el objetivo se describen en un mismo campo.
 
-Los datos comerciales se guardan en Room. La imagen del perfil se mantiene durante la sesión y los cambios de orientación; la captura usa un archivo temporal y no se garantiza que la imagen se conserve al cerrar la aplicación.
-
-El público esperado y el objetivo se describen en un mismo campo. El contacto de una gestión puede anotarse en las observaciones; el historial se consulta por oportunidad y no hay un historial separado por contacto.
-
-Los ejemplos se adaptaron para trabajar con los datos del caso. Los listados y la edición usan consultas sencillas de Room; las fechas se validan en una clase común y la imagen se muestra desde el Uri del perfil. Estas partes no son copias literales de un proyecto completo del profesor.
-
-El guardado de una oportunidad está dividido en pasos: validar, preparar los datos y guardar la ficha con su cambio de estado. Room mantiene esas dos operaciones juntas para que un error no deje el historial incompleto.
-
-Antes de entregar falta completar el número de equipo, adjuntar la planificación real de Trello o equivalente y comprobar los accesos del docente. La misma versión debe quedar en GitHub y en AVA, dentro del plazo indicado en la pauta.
+Para la entrega quedan por completar el número de equipo, las evidencias de Trello o una herramienta equivalente y los accesos del docente. GitHub y AVA deben contener la misma versión del proyecto.
