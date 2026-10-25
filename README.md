@@ -42,7 +42,7 @@ Las fechas se escriben como `AAAA-MM-DD`, las horas como `HH:mm` y los costos co
 
 ## Organización del código
 
-Los formularios siguen la estructura trabajada en clases: la pantalla muestra los datos, el ViewModel maneja el estado y valida, y el DAO realiza las operaciones de la base de datos.
+En los formularios, la pantalla muestra los datos, el ViewModel maneja el estado y valida, y el DAO realiza las operaciones de la base de datos.
 
 - `model`: estados de los formularios, errores, catálogos y fechas.
 - `model/data/local`: entidades, DAO y base Room.
@@ -50,8 +50,6 @@ Los formularios siguen la estructura trabajada en clases: la pantalla muestra lo
 - `navigation`: rutas y conexión entre pantallas.
 - `ui`: pantallas, componentes compartidos, tema y tamaños de ventana.
 - `data`: preferencia de avisos con DataStore.
-
-Se tomaron como base los formularios y la navegación de las Guías 10 y 11, la persistencia con Room, los estados y animaciones de la Guía 12 y la actividad de cámara y galería de la Guía 13. Los campos y las consultas se adaptaron al caso de oportunidades.
 
 ## Qué falta revisar
 
