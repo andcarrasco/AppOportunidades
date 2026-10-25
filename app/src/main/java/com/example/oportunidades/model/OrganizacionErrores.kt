@@ -7,5 +7,5 @@ data class OrganizacionErrores(
     val region: String? = null,
     val sitioWeb: String? = null,
     val publico: String? = null,
-    val observaciones: String? = null
+    val observaciones: String? = null,
 )

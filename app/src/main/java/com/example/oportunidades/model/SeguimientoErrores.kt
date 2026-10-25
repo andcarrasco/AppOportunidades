@@ -8,5 +8,5 @@ data class SeguimientoErrores(
     val resultado: String? = null,
     val proximaAccion: String? = null,
     val proximaFecha: String? = null,
-    val observaciones: String? = null
+    val observaciones: String? = null,
 )

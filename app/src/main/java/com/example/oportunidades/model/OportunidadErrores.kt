@@ -22,5 +22,5 @@ data class OportunidadErrores(
     val requisitos: String? = null,
     val costos: String? = null,
     val espacios: String? = null,
-    val observaciones: String? = null
+    val observaciones: String? = null,
 )

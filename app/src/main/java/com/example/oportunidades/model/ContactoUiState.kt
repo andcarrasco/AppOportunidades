@@ -10,5 +10,5 @@ data class ContactoUiState(
     val medio: String = "",
     val estado: String = "",
     val observaciones: String = "",
-    val errores: ContactoErrores = ContactoErrores()
+    val errores: ContactoErrores = ContactoErrores(),
 )

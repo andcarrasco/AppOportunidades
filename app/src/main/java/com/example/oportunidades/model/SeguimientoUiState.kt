@@ -10,5 +10,5 @@ data class SeguimientoUiState(
     val proximaAccion: String = "",
     val proximaFecha: String = "",
     val observaciones: String = "",
-    val errores: SeguimientoErrores = SeguimientoErrores()
+    val errores: SeguimientoErrores = SeguimientoErrores(),
 )

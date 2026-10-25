@@ -9,5 +9,5 @@ data class OrganizacionUiState(
     val sitioWeb: String = "",
     val publico: String = "",
     val observaciones: String = "",
-    val errores: OrganizacionErrores = OrganizacionErrores()
+    val errores: OrganizacionErrores = OrganizacionErrores(),
 )

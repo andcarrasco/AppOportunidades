@@ -9,5 +9,5 @@ data class ResultadoUiState(
     val interesados: String = "",
     val inscripciones: String = "",
     val observaciones: String = "",
-    val errores: ResultadoErrores = ResultadoErrores()
+    val errores: ResultadoErrores = ResultadoErrores(),
 )

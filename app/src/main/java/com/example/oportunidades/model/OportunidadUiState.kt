@@ -24,5 +24,5 @@ data class OportunidadUiState(
     val costos: String = "",
     val espacios: String = "",
     val observaciones: String = "",
-    val errores: OportunidadErrores = OportunidadErrores()
+    val errores: OportunidadErrores = OportunidadErrores(),
 )

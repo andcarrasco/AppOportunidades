@@ -8,5 +8,5 @@ data class ContactoErrores(
     val telefono: String? = null,
     val medio: String? = null,
     val estado: String? = null,
-    val observaciones: String? = null
+    val observaciones: String? = null,
 )

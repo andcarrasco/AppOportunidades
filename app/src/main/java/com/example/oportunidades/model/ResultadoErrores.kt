@@ -7,5 +7,5 @@ data class ResultadoErrores(
     val contactos: String? = null,
     val interesados: String? = null,
     val inscripciones: String? = null,
-    val observaciones: String? = null
+    val observaciones: String? = null,
 )

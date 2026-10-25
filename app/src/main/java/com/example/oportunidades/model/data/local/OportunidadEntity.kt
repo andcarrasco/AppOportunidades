@@ -1,6 +1,8 @@
 package com.example.oportunidades.model.data.local
+
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+
 @Entity(tableName = "oportunidades")
 data class OportunidadEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
@@ -27,5 +29,5 @@ data class OportunidadEntity(
     val costos: String = "",
     val espacios: String = "",
     val observaciones: String = "",
-    val actualizacion: String = ""
+    val actualizacion: String = "",
 )
