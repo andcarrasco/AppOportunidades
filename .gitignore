@@ -7,5 +7,6 @@ local.properties
 ._*
 
 *.md
+!README.md
 
 .kotlin/
