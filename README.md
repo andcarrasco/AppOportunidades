@@ -59,4 +59,10 @@ También hay que comprobar que los registros sigan disponibles después de cerra
 
 El historial se consulta por oportunidad. El contacto de una gestión se puede indicar en sus observaciones; no hay un historial separado por contacto. El público esperado y el objetivo se describen en un mismo campo.
 
-Para la entrega quedan por completar el número de equipo, las evidencias de Trello o una herramienta equivalente y los accesos del docente. GitHub y AVA deben contener la misma versión del proyecto.
+Para la entrega quedan por completar los accesos del docente. GitHub y AVA deben contener la misma version del proyecto.
+
+## Planificacion
+
+Tablero de Trello (publico): https://trello.com/b/ddjxbRZd/dsy1105-parcial-2-appoportunidades
+
+Equipo N°: 2
