@@ -19,6 +19,7 @@ fun OportunidadCard(o: OportunidadEntity, onAbrir: () -> Unit) {
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp)) {
             Text(o.nombre, style = MaterialTheme.typography.titleLarge)
+            Text("Tipo: ${o.tipo}")
             Text("${o.fechaInicio} · ${o.comuna} · ${o.region}")
             Text("${o.estado} · Prioridad ${o.prioridad}")
             TextButton(onClick = onAbrir) { Text("Ver oportunidad") }

@@ -5,12 +5,14 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.oportunidades.model.*
 import com.example.oportunidades.model.data.local.*
+import com.example.oportunidades.model.data.repository.OportunidadRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 // Lógica de consulta, filtros y avisos fuera de los componentes visuales.
 class GestionViewModel(app: Application) : AndroidViewModel(app) {
     private val db = AppDatabase.getDatabase(app)
+    private val oportunidadesRepository = OportunidadRepository(db)
     private val _filtros = MutableStateFlow(FiltrosUiState())
     val filtros: StateFlow<FiltrosUiState> = _filtros
     private val _oportunidades = MutableStateFlow<List<OportunidadEntity>>(emptyList())
@@ -27,7 +29,7 @@ class GestionViewModel(app: Application) : AndroidViewModel(app) {
     init {
         viewModelScope.launch {
             try {
-                db.oportunidadDao().obtenerTodos().collect {
+                oportunidadesRepository.obtenerTodos().collect {
                     _oportunidades.value = it
                     _cargando.value = false
                 }

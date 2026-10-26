@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.dp
 import com.example.oportunidades.model.data.local.*
 import com.example.oportunidades.ui.components.*
 import com.example.oportunidades.ui.utils.obtenerAnchoContenido
+import com.example.oportunidades.viewmodel.EvidenciaViewModel
 
 @Composable
 fun DetalleOportunidadScreen(
@@ -18,6 +19,7 @@ fun DetalleOportunidadScreen(
     organizaciones: List<OrganizacionEntity>,
     contactos: List<ContactoEntity>,
     resultados: List<ResultadoEntity>,
+    evidenciaViewModel: EvidenciaViewModel,
     onEditar: () -> Unit,
     onSeguimiento: () -> Unit,
     onHistorial: () -> Unit,
@@ -73,6 +75,8 @@ fun DetalleOportunidadScreen(
                 Text("Espacios disponibles: ${o.espacios}")
                 Text("Observaciones: ${o.observaciones}")
                 Text("Última actualización: ${o.actualizacion}")
+                HorizontalDivider()
+                EvidenciasOportunidad(o.id, evidenciaViewModel)
                 HorizontalDivider()
                 Text("Contactos corporativos", style = MaterialTheme.typography.titleLarge)
                 contactos

@@ -3,17 +3,16 @@ package com.example.oportunidades.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.room.withTransaction
 import com.example.oportunidades.model.*
 import com.example.oportunidades.model.data.local.*
+import com.example.oportunidades.model.data.repository.OportunidadRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class OportunidadViewModel(app: Application) : AndroidViewModel(app) {
-    private val db = AppDatabase.getDatabase(app)
-    private val dao = db.oportunidadDao()
+    private val repository = OportunidadRepository(AppDatabase.getDatabase(app))
     private val _estado = MutableStateFlow(OportunidadUiState())
     val estado: StateFlow<OportunidadUiState> = _estado
     private val _registros = MutableStateFlow<List<OportunidadEntity>>(emptyList())
@@ -28,7 +27,7 @@ class OportunidadViewModel(app: Application) : AndroidViewModel(app) {
     init {
         viewModelScope.launch {
             try {
-                dao.obtenerTodos().collect {
+                repository.obtenerTodos().collect {
                     _registros.value = it
                     _cargando.value = false
                 }
@@ -231,8 +230,7 @@ class OportunidadViewModel(app: Application) : AndroidViewModel(app) {
             try {
 
                 if (
-                    db.organizacionDao().obtener(estadoActual.organizacionId.toLongOrNull() ?: 0) ==
-                        null
+                    !repository.organizacionExiste(estadoActual.organizacionId.toLongOrNull() ?: 0)
                 ) {
                     _mensaje.value = "Selecciona una organización registrada"
                     return@launch
@@ -266,7 +264,7 @@ class OportunidadViewModel(app: Application) : AndroidViewModel(app) {
                         observaciones = estadoActual.observaciones.trim(),
                         actualizacion = Fechas.hoy() + " " + Fechas.hora(),
                     )
-                val guardadoId = guardarConHistorial(registro)
+                val guardadoId = repository.guardar(registro)
 
                 _estado.update { it.copy(id = guardadoId) }
                 _mensaje.value = ""
@@ -280,70 +278,6 @@ class OportunidadViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    // Room guarda la ficha y su historial juntos. Si algo falla, revierte ambos.
-    private suspend fun guardarConHistorial(registro: OportunidadEntity): Long {
-        return db.withTransaction {
-            val anterior = if (registro.id == 0L) null else dao.obtener(registro.id)
-            var id = registro.id
-
-            if (id == 0L) {
-                id = dao.insertar(registro)
-            } else {
-                modificar(registro)
-            }
-
-            if (anterior == null || anterior.estado != registro.estado) {
-                var descripcion = "Registro: ${registro.estado}"
-                if (anterior != null) {
-                    descripcion = "${anterior.estado} → ${registro.estado}"
-                }
-
-                val cambio =
-                    SeguimientoEntity(
-                        oportunidadId = id.toString(),
-                        responsable = registro.responsable,
-                        tipo = "Cambio de estado",
-                        fecha = Fechas.hoy(),
-                        hora = Fechas.hora(),
-                        resultado = descripcion,
-                    )
-                db.seguimientoDao().insertar(cambio)
-            }
-
-            id
-        }
-    }
-
-    private suspend fun modificar(registro: OportunidadEntity) {
-        dao.modificar(
-            id = registro.id,
-            nombre = registro.nombre,
-            tipo = registro.tipo,
-            descripcion = registro.descripcion,
-            fuente = registro.fuente,
-            fechaDeteccion = registro.fechaDeteccion,
-            responsable = registro.responsable,
-            prioridad = registro.prioridad,
-            potencial = registro.potencial,
-            estado = registro.estado,
-            organizacionId = registro.organizacionId,
-            fechaInicio = registro.fechaInicio,
-            fechaTermino = registro.fechaTermino,
-            horario = registro.horario,
-            comuna = registro.comuna,
-            region = registro.region,
-            ubicacion = registro.ubicacion,
-            publico = registro.publico,
-            asistentes = registro.asistentes,
-            condiciones = registro.condiciones,
-            requisitos = registro.requisitos,
-            costos = registro.costos,
-            espacios = registro.espacios,
-            observaciones = registro.observaciones,
-            actualizacion = registro.actualizacion,
-        )
-    }
-
     companion object {
         fun validarDatos(estadoActual: OportunidadUiState): OportunidadErrores {
             val asistentes = estadoActual.asistentes.toIntOrNull()
@@ -352,10 +286,15 @@ class OportunidadViewModel(app: Application) : AndroidViewModel(app) {
             return OportunidadErrores(
                 nombre = if (estadoActual.nombre.isBlank()) "Campo obligatorio" else null,
                 tipo = if (estadoActual.tipo.isBlank()) "Campo obligatorio" else null,
+                descripcion = if (estadoActual.descripcion.isBlank()) "Campo obligatorio" else null,
                 fuente = if (estadoActual.fuente.isBlank()) "Campo obligatorio" else null,
                 responsable = if (estadoActual.responsable.isBlank()) "Campo obligatorio" else null,
                 prioridad = if (estadoActual.prioridad.isBlank()) "Campo obligatorio" else null,
-                potencial = if (estadoActual.potencial.isBlank()) "Campo obligatorio" else null,
+                potencial =
+                    if (estadoActual.potencial.isBlank()) "Campo obligatorio"
+                    else if (estadoActual.potencial !in Catalogos.potenciales)
+                        "Selecciona Bajo, Medio o Alto"
+                    else null,
                 estado = if (estadoActual.estado.isBlank()) "Campo obligatorio" else null,
                 organizacionId =
                     if (estadoActual.organizacionId.isBlank()) "Campo obligatorio" else null,

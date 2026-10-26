@@ -14,6 +14,7 @@ Toda la información usada para la demostración es ficticia. Los datos se guard
 - Registrar gestiones, propuestas y próximas acciones, y consultar el historial de cada oportunidad.
 - Ver avisos de eventos próximos, contactos pendientes, propuestas sin respuesta y seguimientos atrasados.
 - Registrar el resultado de una activación con cantidades ficticias de asistentes, contactos e inscripciones.
+- Tomar fotografías desde el detalle de una oportunidad y conservarlas como evidencias en el teléfono.
 - Usar la cámara o elegir una imagen de la galería para el perfil.
 - Activar o desactivar los avisos desde el perfil y conservar esa preferencia.
 
@@ -34,7 +35,7 @@ El acceso es local, con una cuenta fija. Al cerrar el proceso de la aplicación 
 
 Desde Oportunidades, entrar a Organizaciones y contactos y registrar una organización. Después se puede agregar un contacto y crear una oportunidad asociada a esa organización.
 
-La ficha reúne la oportunidad y los datos del evento. Desde el detalle se puede editar, agregar una gestión, revisar el historial o registrar el resultado de la activación. Los cambios de estado también quedan en el historial.
+La ficha reúne la oportunidad y los datos del evento. Nombre, tipo, descripción, fuente, prioridad, potencial y estado son obligatorios; el potencial debe ser Bajo, Medio o Alto. Desde el detalle se puede editar, agregar una gestión, revisar el historial o registrar el resultado de la activación. Los cambios de estado también quedan en el historial. En el detalle, Fotografiar evidencia permite tomar una foto de prueba y verla asociada a esa oportunidad.
 
 Para registrar una propuesta, agregar una gestión de tipo Envío de propuesta y cambiar el estado de la oportunidad a Propuesta enviada. La app solo deja constancia de esa gestión; no envía correos ni mensajes.
 
@@ -42,10 +43,11 @@ Las fechas se escriben como `AAAA-MM-DD`, las horas como `HH:mm` y los costos co
 
 ## Organización del código
 
-En los formularios, la pantalla muestra los datos, el ViewModel maneja el estado y valida, y el DAO realiza las operaciones de la base de datos.
+En los formularios, la pantalla muestra los datos y el ViewModel maneja el estado y valida. En oportunidades, el Repository coordina el acceso a los DAO y el guardado conjunto de la ficha y su historial en Room. Las evidencias tienen su propio Repository para los archivos de imagen.
 
 - `model`: estados de los formularios, errores, catálogos y fechas.
 - `model/data/local`: entidades, DAO y base Room.
+- `model/data/repository`: acceso a los datos de oportunidades y archivos de evidencias.
 - `viewmodel`: validaciones, guardado, filtros y avisos.
 - `navigation`: rutas y conexión entre pantallas.
 - `ui`: pantallas, componentes compartidos, tema y tamaños de ventana.
@@ -55,7 +57,7 @@ En los formularios, la pantalla muestra los datos, el ViewModel maneja el estado
 
 Hay pruebas de validación y de selección de la última gestión en `app/src/test`. La versión actual se revisó de forma estática, pero todavía falta compilarla, ejecutar las pruebas y comprobar el recorrido completo en un teléfono, incluidos permisos, captura y cancelación de imágenes.
 
-También hay que comprobar que los registros sigan disponibles después de cerrar y abrir la app, y que se conserve la preferencia de avisos. La foto del perfil usa almacenamiento temporal y no tiene la misma persistencia que los datos guardados en Room.
+También hay que comprobar que los registros sigan disponibles después de cerrar y abrir la app, y que se conserve la preferencia de avisos. La foto del perfil usa almacenamiento temporal. Las fotografías tomadas desde el detalle de una oportunidad se guardan en archivos internos asociados a su identificador; se conservan al reiniciar la app y se eliminan al borrar sus datos o desinstalarla.
 
 El historial se consulta por oportunidad. El contacto de una gestión se puede indicar en sus observaciones; no hay un historial separado por contacto. El público esperado y el objetivo se describen en un mismo campo.
 

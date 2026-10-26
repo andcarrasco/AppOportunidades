@@ -89,7 +89,7 @@ fun OportunidadScreen(
                 Selector(
                     "Potencial comercial",
                     estado.potencial,
-                    listOf("Bajo", "Medio", "Alto").map { it to it },
+                    Catalogos.potenciales.map { it to it },
                     estado.errores.potencial,
                     viewModel::onPotencialChange,
                 )

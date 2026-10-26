@@ -22,6 +22,7 @@ object Catalogos {
             "Otra instancia relevante",
         )
     val prioridades = listOf("Baja", "Media", "Alta")
+    val potenciales = listOf("Bajo", "Medio", "Alto")
     val organizaciones =
         listOf(
             "Empresa",

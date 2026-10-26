@@ -22,6 +22,7 @@ fun AppNavigation() {
     val seguimiento: SeguimientoViewModel = viewModel()
     val resultado: ResultadoViewModel = viewModel()
     val perfil: PerfilViewModel = viewModel()
+    val evidencia: EvidenciaViewModel = viewModel()
     val gestion: GestionViewModel = viewModel()
     val main: MainViewModel = viewModel()
     val sesion by usuario.estado.collectAsState()
@@ -148,6 +149,7 @@ fun AppNavigation() {
                     organizaciones,
                     contactos,
                     resultados,
+                    evidencia,
                     onEditar = {
                         if (actual != null) {
                             oportunidad.cargar(actual)

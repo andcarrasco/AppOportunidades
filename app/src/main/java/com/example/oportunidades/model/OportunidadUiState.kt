@@ -9,7 +9,7 @@ data class OportunidadUiState(
     val responsable: String = "",
     val prioridad: String = "",
     val potencial: String = "",
-    val estado: String = "",
+    val estado: String = "Evento identificado",
     val organizacionId: String = "",
     val fechaInicio: String = "",
     val fechaTermino: String = "",

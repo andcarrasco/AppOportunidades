@@ -10,6 +10,7 @@ class ValidacionesTest {
         OportunidadUiState(
             nombre = "Feria Demo",
             tipo = "Feria empresarial",
+            descripcion = "Feria ficticia para presentar beneficios a trabajadores",
             fuente = "Registro ficticio",
             responsable = "Ejecutivo Demo",
             prioridad = "Media",
@@ -31,6 +32,9 @@ class ValidacionesTest {
     fun formularioVacioEntregaErroresEnCamposObligatorios() {
         val e = OportunidadViewModel.validarDatos(OportunidadUiState())
         assertNotNull(e.nombre)
+        assertNotNull(e.descripcion)
+        assertNotNull(e.fuente)
+        assertNotNull(e.potencial)
         assertNotNull(e.organizacionId)
         assertNotNull(e.fechaInicio)
     }
@@ -44,6 +48,23 @@ class ValidacionesTest {
         assertNull(e.fechaInicio)
         assertNull(e.fechaTermino)
         assertNull(e.costos)
+    }
+
+    @Test
+    fun descripcionEnBlancoEsRechazada() {
+        val errores = OportunidadViewModel.validarDatos(oportunidadValida().copy(descripcion = "   "))
+        assertNotNull(errores.descripcion)
+        assertNull(OportunidadViewModel.validarDatos(oportunidadValida()).descripcion)
+    }
+
+    @Test
+    fun potencialDebePertenecerAlCatalogo() {
+        val errores = OportunidadViewModel.validarDatos(oportunidadValida().copy(potencial = "Muy alto"))
+        assertNotNull(errores.potencial)
+        for (potencial in Catalogos.potenciales) {
+            val validos = OportunidadViewModel.validarDatos(oportunidadValida().copy(potencial = potencial))
+            assertNull(validos.potencial)
+        }
     }
 
     @Test
