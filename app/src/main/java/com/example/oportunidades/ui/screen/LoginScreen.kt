@@ -11,12 +11,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.oportunidades.navigation.Screen
 import com.example.oportunidades.ui.components.*
 import com.example.oportunidades.ui.utils.obtenerAnchoContenido
+import com.example.oportunidades.viewmodel.MainViewModel
 import com.example.oportunidades.viewmodel.UsuarioViewModel
 
 @Composable
-fun LoginScreen(viewModel: UsuarioViewModel, onIngresar: () -> Unit) {
+fun LoginScreen(viewModel: UsuarioViewModel, mainViewModel: MainViewModel) {
     val estado by viewModel.estado.collectAsState()
     val anchoContenido = obtenerAnchoContenido()
 
@@ -58,7 +60,15 @@ fun LoginScreen(viewModel: UsuarioViewModel, onIngresar: () -> Unit) {
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Button(
-                    onClick = { if (viewModel.ingresar()) onIngresar() },
+                    onClick = {
+                        if (viewModel.validarFormulario()) {
+                            mainViewModel.navigateTo(
+                                Screen.Home,
+                                popUpToRoute = Screen.Login,
+                                inclusive = true,
+                            )
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text("Ingresar")

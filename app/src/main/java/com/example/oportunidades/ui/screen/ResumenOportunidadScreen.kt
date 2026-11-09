@@ -9,12 +9,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.oportunidades.model.OportunidadUiState
+import com.example.oportunidades.navigation.Screen
 import com.example.oportunidades.ui.components.*
 import com.example.oportunidades.ui.utils.obtenerAnchoContenido
+import com.example.oportunidades.viewmodel.MainViewModel
+import com.example.oportunidades.viewmodel.OportunidadViewModel
 
+// Observa el mismo OportunidadViewModel del formulario, como ResumenScreen de la guía 11.
 @Composable
-fun ResumenOportunidadScreen(o: OportunidadUiState, onDetalle: () -> Unit) {
+fun ResumenOportunidadScreen(viewModel: OportunidadViewModel, mainViewModel: MainViewModel) {
+    val o by viewModel.estado.collectAsState()
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(o.id) { visible = o.id > 0 }
     val anchoContenido = obtenerAnchoContenido()
@@ -59,7 +63,17 @@ fun ResumenOportunidadScreen(o: OportunidadUiState, onDetalle: () -> Unit) {
                 Text("Costos referenciales ficticios: ${o.costos}")
                 Text("Espacios disponibles: ${o.espacios}")
                 Text("Observaciones: ${o.observaciones}")
-                Button(onClick = onDetalle) { Text("Ir a la ficha guardada") }
+                Button(
+                    onClick = {
+                        mainViewModel.navigateTo(
+                            Screen.Detalle,
+                            popUpToRoute = Screen.Resumen,
+                            inclusive = true,
+                        )
+                    }
+                ) {
+                    Text("Ir a la ficha guardada")
+                }
             }
         }
     }

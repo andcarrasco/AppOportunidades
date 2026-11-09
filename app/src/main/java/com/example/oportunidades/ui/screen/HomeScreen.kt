@@ -9,18 +9,22 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.oportunidades.navigation.Screen
 import com.example.oportunidades.ui.components.*
 import com.example.oportunidades.ui.utils.obtenerAnchoContenido
 import com.example.oportunidades.ui.utils.obtenerWindowSizeClass
 import com.example.oportunidades.viewmodel.GestionViewModel
+import com.example.oportunidades.viewmodel.MainViewModel
+import com.example.oportunidades.viewmodel.OportunidadViewModel
 
 @Composable
 fun HomeScreen(
     gestion: GestionViewModel,
-    onNueva: () -> Unit,
-    onOportunidades: () -> Unit,
-    onPendientes: () -> Unit,
+    oportunidadViewModel: OportunidadViewModel,
+    mainViewModel: MainViewModel,
 ) {
+    val onOportunidades = { mainViewModel.navigateTo(Screen.Oportunidades, singleTop = true) }
+    val onPendientes = { mainViewModel.navigateTo(Screen.Pendientes, singleTop = true) }
     val lista by gestion.oportunidades.collectAsState()
     val gestiones by gestion.seguimientos.collectAsState()
     val resultados by gestion.resultados.collectAsState()
@@ -66,7 +70,13 @@ fun HomeScreen(
                             onPendientes,
                         )
                 }
-                Button(onClick = onNueva, modifier = Modifier.fillMaxWidth()) {
+                Button(
+                    onClick = {
+                        oportunidadViewModel.nuevo()
+                        mainViewModel.navigateTo(Screen.Oportunidad, singleTop = true)
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
                     Text("Registrar oportunidad")
                 }
                 Text(

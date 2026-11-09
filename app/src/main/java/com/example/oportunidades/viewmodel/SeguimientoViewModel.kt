@@ -66,6 +66,10 @@ class SeguimientoViewModel(app: Application) : AndroidViewModel(app) {
         _mensaje.value = ""
     }
 
+    // Historial de gestiones de una oportunidad.
+    fun deOportunidad(lista: List<SeguimientoEntity>, oportunidadId: Long): List<SeguimientoEntity> =
+        lista.filter { it.oportunidadId == oportunidadId.toString() }
+
     fun onOportunidadIdChange(valor: String) {
         _estado.update {
             it.copy(oportunidadId = valor, errores = it.errores.copy(oportunidadId = null))
@@ -112,57 +116,57 @@ class SeguimientoViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    // Validación global del formulario
     fun validarFormulario(): Boolean {
         val errores = validarDatos(_estado.value)
+        val hayErrores =
+            listOfNotNull(
+                    errores.oportunidadId,
+                    errores.responsable,
+                    errores.tipo,
+                    errores.fecha,
+                    errores.hora,
+                    errores.resultado,
+                    errores.proximaAccion,
+                    errores.proximaFecha,
+                    errores.observaciones,
+                )
+                .isNotEmpty()
         _estado.update { it.copy(errores = errores) }
-        return listOfNotNull(
-                errores.oportunidadId,
-                errores.responsable,
-                errores.tipo,
-                errores.fecha,
-                errores.hora,
-                errores.resultado,
-                errores.proximaAccion,
-                errores.proximaFecha,
-                errores.observaciones,
-            )
-            .isEmpty()
+        return !hayErrores
     }
 
+    // Guarda en Room. La pantalla ejecuta validarFormulario() antes de llamar a guardar().
     fun guardar(onListo: () -> Unit) {
-        if (_guardando.value || !validarFormulario()) return
-        val estadoActual = _estado.value
+        if (_guardando.value) return
+        val a = _estado.value
         _guardando.value = true
         _mensaje.value = ""
         viewModelScope.launch {
             try {
-
-                if (
-                    db.oportunidadDao().obtener(estadoActual.oportunidadId.toLongOrNull() ?: 0) ==
-                        null
-                ) {
+                if (db.oportunidadDao().obtener(a.oportunidadId.toLongOrNull() ?: 0) == null) {
                     _mensaje.value = "La oportunidad ya no está disponible"
                     return@launch
                 }
 
                 val registro =
                     SeguimientoEntity(
-                        id = estadoActual.id,
-                        oportunidadId = estadoActual.oportunidadId.trim(),
-                        responsable = estadoActual.responsable.trim(),
-                        tipo = estadoActual.tipo.trim(),
-                        fecha = estadoActual.fecha.trim(),
-                        hora = estadoActual.hora.trim(),
-                        resultado = estadoActual.resultado.trim(),
-                        proximaAccion = estadoActual.proximaAccion.trim(),
-                        proximaFecha = estadoActual.proximaFecha.trim(),
-                        observaciones = estadoActual.observaciones.trim(),
+                        id = a.id,
+                        oportunidadId = a.oportunidadId.trim(),
+                        responsable = a.responsable.trim(),
+                        tipo = a.tipo.trim(),
+                        fecha = a.fecha.trim(),
+                        hora = a.hora.trim(),
+                        resultado = a.resultado.trim(),
+                        proximaAccion = a.proximaAccion.trim(),
+                        proximaFecha = a.proximaFecha.trim(),
+                        observaciones = a.observaciones.trim(),
                     )
                 val guardadoId =
-                    if (estadoActual.id == 0L) dao.insertar(registro)
+                    if (a.id == 0L) dao.insertar(registro)
                     else {
                         dao.modificar(
-                            id = estadoActual.id,
+                            id = a.id,
                             oportunidadId = registro.oportunidadId,
                             responsable = registro.responsable,
                             tipo = registro.tipo,
@@ -173,11 +177,10 @@ class SeguimientoViewModel(app: Application) : AndroidViewModel(app) {
                             proximaFecha = registro.proximaFecha,
                             observaciones = registro.observaciones,
                         )
-                        estadoActual.id
+                        a.id
                     }
 
                 _estado.update { it.copy(id = guardadoId) }
-                _mensaje.value = ""
                 onListo()
             } catch (e: Exception) {
                 _mensaje.value =

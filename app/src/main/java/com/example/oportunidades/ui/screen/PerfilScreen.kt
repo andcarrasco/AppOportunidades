@@ -16,11 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
 import com.example.oportunidades.ui.components.*
 import com.example.oportunidades.ui.utils.obtenerAnchoContenido
 import com.example.oportunidades.viewmodel.PerfilViewModel
-import java.io.File
 
 @Composable
 fun PerfilScreen(viewModel: PerfilViewModel, onSalir: () -> Unit) {
@@ -35,25 +33,18 @@ fun PerfilScreen(viewModel: PerfilViewModel, onSalir: () -> Unit) {
         )
     val camara =
         rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { aceptada ->
-            if (aceptada) viewModel.actualizarImagen(viewModel.capturaPendiente)
-            viewModel.capturaPendiente = null
+            viewModel.finalizarCaptura(aceptada)
         }
     val galeria =
         rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) {
             viewModel.actualizarImagen(it)
         }
     fun capturar() {
+        val uri = viewModel.prepararCaptura() ?: return
         try {
-            val carpeta = File(context.cacheDir, "capturas").apply { mkdirs() }
-            val uri =
-                FileProvider.getUriForFile(
-                    context,
-                    context.packageName + ".fileprovider",
-                    File.createTempFile("perfil_", ".jpg", carpeta),
-                )
-            viewModel.capturaPendiente = uri
             camara.launch(uri)
         } catch (e: Exception) {
+            viewModel.finalizarCaptura(false)
             viewModel.mensaje("No se pudo abrir la cámara en este dispositivo")
         }
     }

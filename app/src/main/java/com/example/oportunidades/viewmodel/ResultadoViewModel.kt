@@ -64,6 +64,16 @@ class ResultadoViewModel(app: Application) : AndroidViewModel(app) {
         _mensaje.value = ""
     }
 
+    // Cada oportunidad tiene un resultado: se edita el registrado o se prepara uno nuevo.
+    fun abrir(oportunidadId: Long) {
+        val previo = _registros.value.firstOrNull { it.oportunidadId == oportunidadId.toString() }
+        if (previo != null) cargar(previo) else nuevo(oportunidadId.toString())
+    }
+
+    // Resultados registrados para una oportunidad.
+    fun deOportunidad(lista: List<ResultadoEntity>, oportunidadId: Long): List<ResultadoEntity> =
+        lista.filter { it.oportunidadId == oportunidadId.toString() }
+
     fun onOportunidadIdChange(valor: String) {
         _estado.update {
             it.copy(oportunidadId = valor, errores = it.errores.copy(oportunidadId = null))
@@ -104,55 +114,55 @@ class ResultadoViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    // Validación global del formulario
     fun validarFormulario(): Boolean {
         val errores = validarDatos(_estado.value)
+        val hayErrores =
+            listOfNotNull(
+                    errores.oportunidadId,
+                    errores.fecha,
+                    errores.estado,
+                    errores.asistentes,
+                    errores.contactos,
+                    errores.interesados,
+                    errores.inscripciones,
+                    errores.observaciones,
+                )
+                .isNotEmpty()
         _estado.update { it.copy(errores = errores) }
-        return listOfNotNull(
-                errores.oportunidadId,
-                errores.fecha,
-                errores.estado,
-                errores.asistentes,
-                errores.contactos,
-                errores.interesados,
-                errores.inscripciones,
-                errores.observaciones,
-            )
-            .isEmpty()
+        return !hayErrores
     }
 
+    // Guarda en Room. La pantalla ejecuta validarFormulario() antes de llamar a guardar().
     fun guardar(onListo: () -> Unit) {
-        if (_guardando.value || !validarFormulario()) return
-        val estadoActual = _estado.value
+        if (_guardando.value) return
+        val a = _estado.value
         _guardando.value = true
         _mensaje.value = ""
         viewModelScope.launch {
             try {
-
-                if (
-                    db.oportunidadDao().obtener(estadoActual.oportunidadId.toLongOrNull() ?: 0) ==
-                        null
-                ) {
+                if (db.oportunidadDao().obtener(a.oportunidadId.toLongOrNull() ?: 0) == null) {
                     _mensaje.value = "La oportunidad ya no está disponible"
                     return@launch
                 }
 
                 val registro =
                     ResultadoEntity(
-                        id = estadoActual.id,
-                        oportunidadId = estadoActual.oportunidadId.trim(),
-                        fecha = estadoActual.fecha.trim(),
-                        estado = estadoActual.estado.trim(),
-                        asistentes = estadoActual.asistentes.trim(),
-                        contactos = estadoActual.contactos.trim(),
-                        interesados = estadoActual.interesados.trim(),
-                        inscripciones = estadoActual.inscripciones.trim(),
-                        observaciones = estadoActual.observaciones.trim(),
+                        id = a.id,
+                        oportunidadId = a.oportunidadId.trim(),
+                        fecha = a.fecha.trim(),
+                        estado = a.estado.trim(),
+                        asistentes = a.asistentes.trim(),
+                        contactos = a.contactos.trim(),
+                        interesados = a.interesados.trim(),
+                        inscripciones = a.inscripciones.trim(),
+                        observaciones = a.observaciones.trim(),
                     )
                 val guardadoId =
-                    if (estadoActual.id == 0L) dao.insertar(registro)
+                    if (a.id == 0L) dao.insertar(registro)
                     else {
                         dao.modificar(
-                            id = estadoActual.id,
+                            id = a.id,
                             oportunidadId = registro.oportunidadId,
                             fecha = registro.fecha,
                             estado = registro.estado,
@@ -162,11 +172,10 @@ class ResultadoViewModel(app: Application) : AndroidViewModel(app) {
                             inscripciones = registro.inscripciones,
                             observaciones = registro.observaciones,
                         )
-                        estadoActual.id
+                        a.id
                     }
 
                 _estado.update { it.copy(id = guardadoId) }
-                _mensaje.value = ""
                 onListo()
             } catch (e: Exception) {
                 _mensaje.value =

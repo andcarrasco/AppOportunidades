@@ -3,20 +3,24 @@ package com.example.oportunidades.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.room.withTransaction
 import com.example.oportunidades.model.*
 import com.example.oportunidades.model.data.local.*
-import com.example.oportunidades.model.data.repository.OportunidadRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class OportunidadViewModel(app: Application) : AndroidViewModel(app) {
-    private val repository = OportunidadRepository(AppDatabase.getDatabase(app))
+    private val db = AppDatabase.getDatabase(app)
+    private val dao = db.oportunidadDao()
     private val _estado = MutableStateFlow(OportunidadUiState())
     val estado: StateFlow<OportunidadUiState> = _estado
     private val _registros = MutableStateFlow<List<OportunidadEntity>>(emptyList())
     val registros: StateFlow<List<OportunidadEntity>> = _registros
+    // Ficha guardada de la oportunidad seleccionada, tal como está en Room.
+    private val _ficha = MutableStateFlow<OportunidadEntity?>(null)
+    val ficha: StateFlow<OportunidadEntity?> = _ficha
     private val _guardando = MutableStateFlow(false)
     val guardando: StateFlow<Boolean> = _guardando
     private val _mensaje = MutableStateFlow("")
@@ -27,8 +31,9 @@ class OportunidadViewModel(app: Application) : AndroidViewModel(app) {
     init {
         viewModelScope.launch {
             try {
-                repository.obtenerTodos().collect {
+                dao.obtenerTodos().collect {
                     _registros.value = it
+                    actualizarFicha()
                     _cargando.value = false
                 }
             } catch (e: Exception) {
@@ -36,6 +41,11 @@ class OportunidadViewModel(app: Application) : AndroidViewModel(app) {
                 _mensaje.value = "No se pudieron cargar los registros"
             }
         }
+    }
+
+    private fun actualizarFicha() {
+        val id = _estado.value.id
+        _ficha.value = if (id == 0L) null else _registros.value.find { it.id == id }
     }
 
     fun nuevo() {
@@ -49,6 +59,7 @@ class OportunidadViewModel(app: Application) : AndroidViewModel(app) {
                 asistentes = "0",
             )
         _mensaje.value = ""
+        actualizarFicha()
     }
 
     fun cargar(registro: OportunidadEntity) {
@@ -80,6 +91,49 @@ class OportunidadViewModel(app: Application) : AndroidViewModel(app) {
                 observaciones = registro.observaciones,
             )
         _mensaje.value = ""
+        actualizarFicha()
+    }
+
+    // Prepara una oportunidad nueva con los datos leídos desde un código QR.
+    // Los campos de selección solo aceptan valores del catálogo; el resto se completa en el formulario.
+    fun cargarDesdeQr(campos: Map<String, String>, organizaciones: List<OrganizacionEntity>) {
+        nuevo()
+        fun catalogo(valor: String?, opciones: List<String>) =
+            opciones.find { it.equals(valor?.trim(), ignoreCase = true) }
+        val organizacion =
+            organizaciones.find { it.nombre.equals(campos["organizacion"]?.trim(), ignoreCase = true) }
+        _estado.update { a ->
+            a.copy(
+                nombre = campos["nombre"] ?: a.nombre,
+                tipo = catalogo(campos["tipo"], Catalogos.eventos) ?: a.tipo,
+                descripcion = campos["descripcion"] ?: a.descripcion,
+                fuente = campos["fuente"] ?: "Código QR",
+                fechaDeteccion = campos["fechaDeteccion"] ?: a.fechaDeteccion,
+                responsable = campos["responsable"] ?: a.responsable,
+                prioridad = catalogo(campos["prioridad"], Catalogos.prioridades) ?: a.prioridad,
+                potencial = catalogo(campos["potencial"], Catalogos.potenciales) ?: a.potencial,
+                estado = catalogo(campos["estado"], Catalogos.estados) ?: a.estado,
+                organizacionId = organizacion?.id?.toString() ?: a.organizacionId,
+                fechaInicio = campos["fechaInicio"] ?: a.fechaInicio,
+                fechaTermino = campos["fechaTermino"] ?: campos["fechaInicio"] ?: a.fechaTermino,
+                horario = campos["horario"] ?: a.horario,
+                comuna = campos["comuna"] ?: a.comuna,
+                region = campos["region"] ?: a.region,
+                ubicacion = campos["ubicacion"] ?: a.ubicacion,
+                publico = campos["publico"] ?: a.publico,
+                asistentes = campos["asistentes"] ?: a.asistentes,
+                condiciones = campos["condiciones"] ?: a.condiciones,
+                requisitos = campos["requisitos"] ?: a.requisitos,
+                costos = campos["costos"] ?: a.costos,
+                espacios = campos["espacios"] ?: a.espacios,
+                observaciones = campos["observaciones"] ?: a.observaciones,
+            )
+        }
+    }
+
+    // Vuelve a cargar en el formulario la ficha guardada, para editarla.
+    fun editarFicha() {
+        _ficha.value?.let { cargar(it) }
     }
 
     fun onNombreChange(valor: String) {
@@ -190,84 +244,114 @@ class OportunidadViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    // Validación global del formulario
     fun validarFormulario(): Boolean {
         val errores = validarDatos(_estado.value)
+        val hayErrores =
+            listOfNotNull(
+                    errores.nombre,
+                    errores.tipo,
+                    errores.descripcion,
+                    errores.fuente,
+                    errores.fechaDeteccion,
+                    errores.responsable,
+                    errores.prioridad,
+                    errores.potencial,
+                    errores.estado,
+                    errores.organizacionId,
+                    errores.fechaInicio,
+                    errores.fechaTermino,
+                    errores.horario,
+                    errores.comuna,
+                    errores.region,
+                    errores.ubicacion,
+                    errores.publico,
+                    errores.asistentes,
+                    errores.condiciones,
+                    errores.requisitos,
+                    errores.costos,
+                    errores.espacios,
+                    errores.observaciones,
+                )
+                .isNotEmpty()
         _estado.update { it.copy(errores = errores) }
-        return listOfNotNull(
-                errores.nombre,
-                errores.tipo,
-                errores.descripcion,
-                errores.fuente,
-                errores.fechaDeteccion,
-                errores.responsable,
-                errores.prioridad,
-                errores.potencial,
-                errores.estado,
-                errores.organizacionId,
-                errores.fechaInicio,
-                errores.fechaTermino,
-                errores.horario,
-                errores.comuna,
-                errores.region,
-                errores.ubicacion,
-                errores.publico,
-                errores.asistentes,
-                errores.condiciones,
-                errores.requisitos,
-                errores.costos,
-                errores.espacios,
-                errores.observaciones,
-            )
-            .isEmpty()
+        return !hayErrores
     }
 
+    // Guarda en Room. La pantalla ejecuta validarFormulario() antes de llamar a guardar().
     fun guardar(onListo: () -> Unit) {
-        if (_guardando.value || !validarFormulario()) return
-        val estadoActual = _estado.value
+        if (_guardando.value) return
+        val a = _estado.value
         _guardando.value = true
         _mensaje.value = ""
         viewModelScope.launch {
             try {
-
-                if (
-                    !repository.organizacionExiste(estadoActual.organizacionId.toLongOrNull() ?: 0)
-                ) {
+                if (db.organizacionDao().obtener(a.organizacionId.toLongOrNull() ?: 0) == null) {
                     _mensaje.value = "Selecciona una organización registrada"
                     return@launch
                 }
 
                 val registro =
                     OportunidadEntity(
-                        id = estadoActual.id,
-                        nombre = estadoActual.nombre.trim(),
-                        tipo = estadoActual.tipo.trim(),
-                        descripcion = estadoActual.descripcion.trim(),
-                        fuente = estadoActual.fuente.trim(),
-                        fechaDeteccion = estadoActual.fechaDeteccion.trim(),
-                        responsable = estadoActual.responsable.trim(),
-                        prioridad = estadoActual.prioridad.trim(),
-                        potencial = estadoActual.potencial.trim(),
-                        estado = estadoActual.estado.trim(),
-                        organizacionId = estadoActual.organizacionId.trim(),
-                        fechaInicio = estadoActual.fechaInicio.trim(),
-                        fechaTermino = estadoActual.fechaTermino.trim(),
-                        horario = estadoActual.horario.trim(),
-                        comuna = estadoActual.comuna.trim(),
-                        region = estadoActual.region.trim(),
-                        ubicacion = estadoActual.ubicacion.trim(),
-                        publico = estadoActual.publico.trim(),
-                        asistentes = estadoActual.asistentes.trim(),
-                        condiciones = estadoActual.condiciones.trim(),
-                        requisitos = estadoActual.requisitos.trim(),
-                        costos = estadoActual.costos.trim(),
-                        espacios = estadoActual.espacios.trim(),
-                        observaciones = estadoActual.observaciones.trim(),
+                        id = a.id,
+                        nombre = a.nombre.trim(),
+                        tipo = a.tipo.trim(),
+                        descripcion = a.descripcion.trim(),
+                        fuente = a.fuente.trim(),
+                        fechaDeteccion = a.fechaDeteccion.trim(),
+                        responsable = a.responsable.trim(),
+                        prioridad = a.prioridad.trim(),
+                        potencial = a.potencial.trim(),
+                        estado = a.estado.trim(),
+                        organizacionId = a.organizacionId.trim(),
+                        fechaInicio = a.fechaInicio.trim(),
+                        fechaTermino = a.fechaTermino.trim(),
+                        horario = a.horario.trim(),
+                        comuna = a.comuna.trim(),
+                        region = a.region.trim(),
+                        ubicacion = a.ubicacion.trim(),
+                        publico = a.publico.trim(),
+                        asistentes = a.asistentes.trim(),
+                        condiciones = a.condiciones.trim(),
+                        requisitos = a.requisitos.trim(),
+                        costos = a.costos.trim(),
+                        espacios = a.espacios.trim(),
+                        observaciones = a.observaciones.trim(),
                         actualizacion = Fechas.hoy() + " " + Fechas.hora(),
                     )
-                val guardadoId = repository.guardar(registro)
+
+                // Room guarda la ficha y su historial juntos. Si algo falla, revierte ambos.
+                val guardadoId =
+                    db.withTransaction {
+                        val anterior = if (registro.id == 0L) null else dao.obtener(registro.id)
+                        val id =
+                            if (registro.id == 0L) dao.insertar(registro)
+                            else {
+                                modificar(registro)
+                                registro.id
+                            }
+
+                        if (anterior == null || anterior.estado != registro.estado) {
+                            val descripcion =
+                                if (anterior == null) "Registro: ${registro.estado}"
+                                else "${anterior.estado} → ${registro.estado}"
+                            db.seguimientoDao()
+                                .insertar(
+                                    SeguimientoEntity(
+                                        oportunidadId = id.toString(),
+                                        responsable = registro.responsable,
+                                        tipo = "Cambio de estado",
+                                        fecha = Fechas.hoy(),
+                                        hora = Fechas.hora(),
+                                        resultado = descripcion,
+                                    )
+                                )
+                        }
+                        id
+                    }
 
                 _estado.update { it.copy(id = guardadoId) }
-                _mensaje.value = ""
+                actualizarFicha()
                 onListo()
             } catch (e: Exception) {
                 _mensaje.value =
@@ -276,6 +360,36 @@ class OportunidadViewModel(app: Application) : AndroidViewModel(app) {
                 _guardando.value = false
             }
         }
+    }
+
+    private suspend fun modificar(registro: OportunidadEntity) {
+        dao.modificar(
+            id = registro.id,
+            nombre = registro.nombre,
+            tipo = registro.tipo,
+            descripcion = registro.descripcion,
+            fuente = registro.fuente,
+            fechaDeteccion = registro.fechaDeteccion,
+            responsable = registro.responsable,
+            prioridad = registro.prioridad,
+            potencial = registro.potencial,
+            estado = registro.estado,
+            organizacionId = registro.organizacionId,
+            fechaInicio = registro.fechaInicio,
+            fechaTermino = registro.fechaTermino,
+            horario = registro.horario,
+            comuna = registro.comuna,
+            region = registro.region,
+            ubicacion = registro.ubicacion,
+            publico = registro.publico,
+            asistentes = registro.asistentes,
+            condiciones = registro.condiciones,
+            requisitos = registro.requisitos,
+            costos = registro.costos,
+            espacios = registro.espacios,
+            observaciones = registro.observaciones,
+            actualizacion = registro.actualizacion,
+        )
     }
 
     companion object {

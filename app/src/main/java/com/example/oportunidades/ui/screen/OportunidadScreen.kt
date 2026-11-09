@@ -9,24 +9,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.oportunidades.model.*
-import com.example.oportunidades.model.data.local.OrganizacionEntity
 import com.example.oportunidades.ui.components.*
 import com.example.oportunidades.ui.utils.obtenerAnchoContenido
-import com.example.oportunidades.viewmodel.OportunidadViewModel
+import com.example.oportunidades.navigation.Screen
+import com.example.oportunidades.viewmodel.*
 
 @Composable
 fun OportunidadScreen(
     viewModel: OportunidadViewModel,
-    organizaciones: List<OrganizacionEntity>,
-    onGuardado: () -> Unit,
-    onVolver: () -> Unit,
+    organizacionViewModel: OrganizacionViewModel,
+    mainViewModel: MainViewModel,
 ) {
+    val organizaciones by organizacionViewModel.registros.collectAsState()
     val estado by viewModel.estado.collectAsState()
     val guardando by viewModel.guardando.collectAsState()
     val mensaje by viewModel.mensaje.collectAsState()
     val anchoContenido = obtenerAnchoContenido()
 
-    Scaffold(topBar = { BarraTitulo("Oportunidad", onVolver) }) { padding ->
+    Scaffold(topBar = { BarraTitulo("Oportunidad") { mainViewModel.navigateBack() } }) { padding ->
         Box(
             modifier = Modifier.padding(padding).fillMaxSize(),
             contentAlignment = Alignment.TopCenter,
@@ -192,7 +192,17 @@ fun OportunidadScreen(
                 BotonGuardar(
                     guardando = guardando,
                     mensaje = mensaje,
-                    onGuardar = { viewModel.guardar(onGuardado) },
+                    onGuardar = {
+                        if (viewModel.validarFormulario()) {
+                            viewModel.guardar {
+                                mainViewModel.navigateTo(
+                                    Screen.Resumen,
+                                    popUpToRoute = Screen.Oportunidad,
+                                    inclusive = true,
+                                )
+                            }
+                        }
+                    },
                 )
             }
         }

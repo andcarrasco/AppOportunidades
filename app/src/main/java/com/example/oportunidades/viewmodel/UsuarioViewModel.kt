@@ -18,7 +18,8 @@ class UsuarioViewModel : ViewModel() {
         _estado.update { it.copy(clave = valor, errores = it.errores.copy(clave = null)) }
     }
 
-    fun ingresar(): Boolean {
+    // Validación global del formulario de acceso con la cuenta de demostración.
+    fun validarFormulario(): Boolean {
         val estadoActual = _estado.value
         val errores =
             UsuarioErrores(
@@ -32,11 +33,11 @@ class UsuarioViewModel : ViewModel() {
                     else if (estadoActual.clave != "Demo2026") "Clave de demostración incorrecta"
                     else null,
             )
-        val valido = errores.correo == null && errores.clave == null
+        val hayErrores = listOfNotNull(errores.correo, errores.clave).isNotEmpty()
         _estado.update {
-            it.copy(errores = errores, activo = valido, clave = if (valido) "" else it.clave)
+            it.copy(errores = errores, activo = !hayErrores, clave = if (hayErrores) it.clave else "")
         }
-        return valido
+        return !hayErrores
     }
 
     fun salir() {

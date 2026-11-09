@@ -12,7 +12,8 @@ import com.example.oportunidades.model.*
 import com.example.oportunidades.model.data.local.*
 import com.example.oportunidades.ui.components.*
 import com.example.oportunidades.ui.utils.obtenerAnchoContenido
-import com.example.oportunidades.viewmodel.GestionViewModel
+import com.example.oportunidades.navigation.Screen
+import com.example.oportunidades.viewmodel.*
 
 @Composable
 fun OportunidadCard(o: OportunidadEntity, onAbrir: () -> Unit) {
@@ -30,11 +31,12 @@ fun OportunidadCard(o: OportunidadEntity, onAbrir: () -> Unit) {
 @Composable
 fun OportunidadesScreen(
     gestion: GestionViewModel,
-    organizaciones: List<OrganizacionEntity>,
-    onNueva: () -> Unit,
-    onOrganizaciones: () -> Unit,
-    onAbrir: (OportunidadEntity) -> Unit,
+    oportunidadViewModel: OportunidadViewModel,
+    organizacionViewModel: OrganizacionViewModel,
+    qrViewModel: QrViewModel,
+    mainViewModel: MainViewModel,
 ) {
+    val organizaciones by organizacionViewModel.registros.collectAsState()
     val lista by gestion.oportunidades.collectAsState()
     val filtros by gestion.filtros.collectAsState()
     val error by gestion.error.collectAsState()
@@ -54,8 +56,27 @@ fun OportunidadesScreen(
                         .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                Button(onClick = onNueva) { Text("Registrar oportunidad") }
-                OutlinedButton(onClick = onOrganizaciones) { Text("Organizaciones y contactos") }
+                Button(
+                    onClick = {
+                        oportunidadViewModel.nuevo()
+                        mainViewModel.navigateTo(Screen.Oportunidad, singleTop = true)
+                    }
+                ) {
+                    Text("Registrar oportunidad")
+                }
+                OutlinedButton(
+                    onClick = {
+                        qrViewModel.clearResult()
+                        mainViewModel.navigateTo(Screen.Qr, singleTop = true)
+                    }
+                ) {
+                    Text("Escanear QR de oportunidad")
+                }
+                OutlinedButton(
+                    onClick = {
+                        mainViewModel.navigateTo(Screen.Organizaciones, singleTop = true)
+                    }
+                ) { Text("Organizaciones y contactos") }
                 CampoTexto("Buscar por nombre", filtros.nombre, null) {
                     gestion.cambiarFiltros(filtros.copy(nombre = it))
                 }
@@ -66,7 +87,7 @@ fun OportunidadesScreen(
                     CampoTexto(
                         "Fecha de inicio (AAAA-MM-DD)",
                         filtros.fecha,
-                        gestion.errorFecha(filtros.fecha),
+                        filtros.errores.fecha,
                     ) {
                         gestion.cambiarFiltros(filtros.copy(fecha = it))
                     }
@@ -115,7 +136,12 @@ fun OportunidadesScreen(
                 if (cargando) CircularProgressIndicator()
                 else if (visibles.isEmpty())
                     Text("Sin resultados. Registra una oportunidad o cambia los filtros.")
-                visibles.forEach { o -> OportunidadCard(o) { onAbrir(o) } }
+                visibles.forEach { o ->
+                    OportunidadCard(o) {
+                        oportunidadViewModel.cargar(o)
+                        mainViewModel.navigateTo(Screen.Detalle, singleTop = true)
+                    }
+                }
             }
         }
     }

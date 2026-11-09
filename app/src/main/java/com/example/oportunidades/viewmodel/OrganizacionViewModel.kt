@@ -11,8 +11,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class OrganizacionViewModel(app: Application) : AndroidViewModel(app) {
-    private val db = AppDatabase.getDatabase(app)
-    private val dao = db.organizacionDao()
+    private val dao = AppDatabase.getDatabase(app).organizacionDao()
     private val _estado = MutableStateFlow(OrganizacionUiState())
     val estado: StateFlow<OrganizacionUiState> = _estado
     private val _registros = MutableStateFlow<List<OrganizacionEntity>>(emptyList())
@@ -59,6 +58,10 @@ class OrganizacionViewModel(app: Application) : AndroidViewModel(app) {
         _mensaje.value = ""
     }
 
+    // Nombre de la organización asociada a un registro, para mostrarlo en otras pantallas.
+    fun nombre(lista: List<OrganizacionEntity>, organizacionId: String): String =
+        lista.find { it.id.toString() == organizacionId }?.nombre ?: "Sin organización"
+
     fun onNombreChange(valor: String) {
         _estado.update { it.copy(nombre = valor, errores = it.errores.copy(nombre = null)) }
     }
@@ -93,47 +96,50 @@ class OrganizacionViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    // Validación global del formulario
     fun validarFormulario(): Boolean {
         val errores = validarDatos(_estado.value)
+        val hayErrores =
+            listOfNotNull(
+                    errores.nombre,
+                    errores.tipo,
+                    errores.rubro,
+                    errores.comuna,
+                    errores.region,
+                    errores.sitioWeb,
+                    errores.publico,
+                    errores.observaciones,
+                )
+                .isNotEmpty()
         _estado.update { it.copy(errores = errores) }
-        return listOfNotNull(
-                errores.nombre,
-                errores.tipo,
-                errores.rubro,
-                errores.comuna,
-                errores.region,
-                errores.sitioWeb,
-                errores.publico,
-                errores.observaciones,
-            )
-            .isEmpty()
+        return !hayErrores
     }
 
+    // Guarda en Room. La pantalla ejecuta validarFormulario() antes de llamar a guardar().
     fun guardar(onListo: () -> Unit) {
-        if (_guardando.value || !validarFormulario()) return
-        val estadoActual = _estado.value
+        if (_guardando.value) return
+        val a = _estado.value
         _guardando.value = true
         _mensaje.value = ""
         viewModelScope.launch {
             try {
-
                 val registro =
                     OrganizacionEntity(
-                        id = estadoActual.id,
-                        nombre = estadoActual.nombre.trim(),
-                        tipo = estadoActual.tipo.trim(),
-                        rubro = estadoActual.rubro.trim(),
-                        comuna = estadoActual.comuna.trim(),
-                        region = estadoActual.region.trim(),
-                        sitioWeb = estadoActual.sitioWeb.trim(),
-                        publico = estadoActual.publico.trim(),
-                        observaciones = estadoActual.observaciones.trim(),
+                        id = a.id,
+                        nombre = a.nombre.trim(),
+                        tipo = a.tipo.trim(),
+                        rubro = a.rubro.trim(),
+                        comuna = a.comuna.trim(),
+                        region = a.region.trim(),
+                        sitioWeb = a.sitioWeb.trim(),
+                        publico = a.publico.trim(),
+                        observaciones = a.observaciones.trim(),
                     )
                 val guardadoId =
-                    if (estadoActual.id == 0L) dao.insertar(registro)
+                    if (a.id == 0L) dao.insertar(registro)
                     else {
                         dao.modificar(
-                            id = estadoActual.id,
+                            id = a.id,
                             nombre = registro.nombre,
                             tipo = registro.tipo,
                             rubro = registro.rubro,
@@ -143,11 +149,10 @@ class OrganizacionViewModel(app: Application) : AndroidViewModel(app) {
                             publico = registro.publico,
                             observaciones = registro.observaciones,
                         )
-                        estadoActual.id
+                        a.id
                     }
 
                 _estado.update { it.copy(id = guardadoId) }
-                _mensaje.value = ""
                 onListo()
             } catch (e: Exception) {
                 _mensaje.value =

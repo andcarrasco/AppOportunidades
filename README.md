@@ -16,6 +16,7 @@ Toda la información usada para la demostración es ficticia. Los datos se guard
 - Registrar el resultado de una activación con cantidades ficticias de asistentes, contactos e inscripciones.
 - Tomar fotografías desde el detalle de una oportunidad y conservarlas como evidencias en el teléfono.
 - Usar la cámara o elegir una imagen de la galería para el perfil.
+- Escanear un código QR con los datos de un evento para crear una oportunidad.
 - Activar o desactivar los avisos desde el perfil y conservar esa preferencia.
 
 ## Cómo ejecutar la app
@@ -37,20 +38,34 @@ Desde Oportunidades, entrar a Organizaciones y contactos y registrar una organiz
 
 La ficha reúne la oportunidad y los datos del evento. Nombre, tipo, descripción, fuente, prioridad, potencial y estado son obligatorios; el potencial debe ser Bajo, Medio o Alto. Desde el detalle se puede editar, agregar una gestión, revisar el historial o registrar el resultado de la activación. Los cambios de estado también quedan en el historial. En el detalle, Fotografiar evidencia permite tomar una foto de prueba y verla asociada a esa oportunidad.
 
+Para crear una oportunidad desde un código QR, en Oportunidades presionar Escanear QR de oportunidad y enfocar el código. El código debe tener una línea por dato, por ejemplo:
+
+```
+Nombre: Feria de beneficios Demo
+Tipo: Feria empresarial
+Organización: Empresa Demo
+Fecha inicio: 2026-12-01
+Hora: 09:30
+Comuna: Santiago
+Región: Metropolitana
+Público: Trabajadores
+```
+
+Los datos se cargan en el formulario; ahí se revisan, se completan los que falten y se presiona Guardar. La organización debe estar registrada con el mismo nombre; si no, se selecciona en el formulario. Un código sin datos reconocidos se usa como descripción.
+
 Para registrar una propuesta, agregar una gestión de tipo Envío de propuesta y cambiar el estado de la oportunidad a Propuesta enviada. La app solo deja constancia de esa gestión; no envía correos ni mensajes.
 
 Las fechas se escriben como `AAAA-MM-DD`, las horas como `HH:mm` y los costos con punto decimal. Para probar cámara y galería, usar una imagen de un objeto o un emblema sin personas identificables.
 
 ## Organización del código
 
-En los formularios, la pantalla muestra los datos y el ViewModel maneja el estado y valida. En oportunidades, el Repository coordina el acceso a los DAO y el guardado conjunto de la ficha y su historial en Room. Las evidencias tienen su propio Repository para los archivos de imagen.
+El código sigue la estructura MVVM de las guías del curso. En los formularios, la pantalla muestra los datos y ejecuta `validarFormulario()` antes de llamar a `guardar()`; el ViewModel maneja el estado, valida y guarda en Room a través de los DAO. La ficha de una oportunidad y su entrada de historial se guardan juntas en una transacción. Las pantallas navegan emitiendo eventos a `MainViewModel`, que `AppNavigation` escucha. Los ViewModel de perfil y evidencias preparan los archivos de imagen con FileProvider.
 
 - `model`: estados de los formularios, errores, catálogos y fechas.
 - `model/data/local`: entidades, DAO y base Room.
-- `model/data/repository`: acceso a los datos de oportunidades y archivos de evidencias.
-- `viewmodel`: validaciones, guardado, filtros y avisos.
+- `viewmodel`: validaciones, guardado, filtros, avisos, imágenes y eventos de navegación.
 - `navigation`: rutas y conexión entre pantallas.
-- `ui`: pantallas, componentes compartidos, tema y tamaños de ventana.
+- `ui`: pantallas, componentes compartidos, tema, tamaños de ventana y lector QR con CameraX y ML Kit.
 - `data`: preferencia de avisos con DataStore.
 
 ## Qué falta revisar

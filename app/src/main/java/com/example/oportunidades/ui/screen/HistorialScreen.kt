@@ -4,19 +4,27 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.oportunidades.model.data.local.SeguimientoEntity
 import com.example.oportunidades.ui.components.*
 import com.example.oportunidades.ui.utils.obtenerAnchoContenido
+import com.example.oportunidades.viewmodel.*
 
 @Composable
-fun HistorialScreen(id: Long, seguimientos: List<SeguimientoEntity>, onVolver: () -> Unit) {
+fun HistorialScreen(
+    oportunidadViewModel: OportunidadViewModel,
+    viewModel: SeguimientoViewModel,
+    mainViewModel: MainViewModel,
+) {
+    val seleccionado by oportunidadViewModel.estado.collectAsState()
+    val seguimientos by viewModel.registros.collectAsState()
     val anchoContenido = obtenerAnchoContenido()
 
-    Scaffold(topBar = { BarraTitulo("Historial de la oportunidad", onVolver) }) { padding ->
+    Scaffold(
+        topBar = { BarraTitulo("Historial de la oportunidad") { mainViewModel.navigateBack() } }
+    ) { padding ->
         Box(
             modifier = Modifier.padding(padding).fillMaxSize(),
             contentAlignment = Alignment.TopCenter,
@@ -28,7 +36,7 @@ fun HistorialScreen(id: Long, seguimientos: List<SeguimientoEntity>, onVolver: (
                         .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                val gestiones = seguimientos.filter { it.oportunidadId == id.toString() }
+                val gestiones = viewModel.deOportunidad(seguimientos, seleccionado.id)
                 if (gestiones.isEmpty()) Text("Sin gestiones registradas.")
                 gestiones.forEach { s ->
                     Text(s.tipo, style = MaterialTheme.typography.titleLarge)

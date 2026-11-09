@@ -9,4 +9,5 @@ data class FiltrosUiState(
     val prioridad: String = "",
     val responsable: String = "",
     val organizacionId: String = "",
+    val errores: FiltrosErrores = FiltrosErrores(),
 )

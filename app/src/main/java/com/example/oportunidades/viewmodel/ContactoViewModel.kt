@@ -38,8 +38,8 @@ class ContactoViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun nuevo() {
-        _estado.value = ContactoUiState()
+    fun nuevo(organizacionId: String = "") {
+        _estado.value = ContactoUiState(organizacionId = organizacionId)
         _mensaje.value = ""
     }
 
@@ -59,6 +59,10 @@ class ContactoViewModel(app: Application) : AndroidViewModel(app) {
             )
         _mensaje.value = ""
     }
+
+    // Contactos asociados a una organización.
+    fun deOrganizacion(lista: List<ContactoEntity>, organizacionId: String): List<ContactoEntity> =
+        lista.filter { it.organizacionId == organizacionId }
 
     fun onOrganizacionIdChange(valor: String) {
         _estado.update {
@@ -100,57 +104,57 @@ class ContactoViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    // Validación global del formulario
     fun validarFormulario(): Boolean {
         val errores = validarDatos(_estado.value)
+        val hayErrores =
+            listOfNotNull(
+                    errores.organizacionId,
+                    errores.nombre,
+                    errores.cargo,
+                    errores.area,
+                    errores.correo,
+                    errores.telefono,
+                    errores.medio,
+                    errores.estado,
+                    errores.observaciones,
+                )
+                .isNotEmpty()
         _estado.update { it.copy(errores = errores) }
-        return listOfNotNull(
-                errores.organizacionId,
-                errores.nombre,
-                errores.cargo,
-                errores.area,
-                errores.correo,
-                errores.telefono,
-                errores.medio,
-                errores.estado,
-                errores.observaciones,
-            )
-            .isEmpty()
+        return !hayErrores
     }
 
+    // Guarda en Room. La pantalla ejecuta validarFormulario() antes de llamar a guardar().
     fun guardar(onListo: () -> Unit) {
-        if (_guardando.value || !validarFormulario()) return
-        val estadoActual = _estado.value
+        if (_guardando.value) return
+        val a = _estado.value
         _guardando.value = true
         _mensaje.value = ""
         viewModelScope.launch {
             try {
-
-                if (
-                    db.organizacionDao().obtener(estadoActual.organizacionId.toLongOrNull() ?: 0) ==
-                        null
-                ) {
+                if (db.organizacionDao().obtener(a.organizacionId.toLongOrNull() ?: 0) == null) {
                     _mensaje.value = "Selecciona una organización registrada"
                     return@launch
                 }
 
                 val registro =
                     ContactoEntity(
-                        id = estadoActual.id,
-                        organizacionId = estadoActual.organizacionId.trim(),
-                        nombre = estadoActual.nombre.trim(),
-                        cargo = estadoActual.cargo.trim(),
-                        area = estadoActual.area.trim(),
-                        correo = estadoActual.correo.trim(),
-                        telefono = estadoActual.telefono.trim(),
-                        medio = estadoActual.medio.trim(),
-                        estado = estadoActual.estado.trim(),
-                        observaciones = estadoActual.observaciones.trim(),
+                        id = a.id,
+                        organizacionId = a.organizacionId.trim(),
+                        nombre = a.nombre.trim(),
+                        cargo = a.cargo.trim(),
+                        area = a.area.trim(),
+                        correo = a.correo.trim(),
+                        telefono = a.telefono.trim(),
+                        medio = a.medio.trim(),
+                        estado = a.estado.trim(),
+                        observaciones = a.observaciones.trim(),
                     )
                 val guardadoId =
-                    if (estadoActual.id == 0L) dao.insertar(registro)
+                    if (a.id == 0L) dao.insertar(registro)
                     else {
                         dao.modificar(
-                            id = estadoActual.id,
+                            id = a.id,
                             organizacionId = registro.organizacionId,
                             nombre = registro.nombre,
                             cargo = registro.cargo,
@@ -161,11 +165,10 @@ class ContactoViewModel(app: Application) : AndroidViewModel(app) {
                             estado = registro.estado,
                             observaciones = registro.observaciones,
                         )
-                        estadoActual.id
+                        a.id
                     }
 
                 _estado.update { it.copy(id = guardadoId) }
-                _mensaje.value = ""
                 onListo()
             } catch (e: Exception) {
                 _mensaje.value =

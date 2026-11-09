@@ -11,17 +11,18 @@ import androidx.compose.ui.unit.dp
 import com.example.oportunidades.model.*
 import com.example.oportunidades.ui.components.*
 import com.example.oportunidades.ui.utils.obtenerAnchoContenido
+import com.example.oportunidades.viewmodel.MainViewModel
 import com.example.oportunidades.viewmodel.ResultadoViewModel
 
 @Composable
-fun ResultadoScreen(viewModel: ResultadoViewModel, onGuardado: () -> Unit, onVolver: () -> Unit) {
+fun ResultadoScreen(viewModel: ResultadoViewModel, mainViewModel: MainViewModel) {
     val estado by viewModel.estado.collectAsState()
     val guardando by viewModel.guardando.collectAsState()
     val mensaje by viewModel.mensaje.collectAsState()
     val anchoContenido = obtenerAnchoContenido()
     var guardado by remember { mutableStateOf(false) }
 
-    Scaffold(topBar = { BarraTitulo("Resultado", onVolver) }) { padding ->
+    Scaffold(topBar = { BarraTitulo("Resultado") { mainViewModel.navigateBack() } }) { padding ->
         Box(
             modifier = Modifier.padding(padding).fillMaxSize(),
             contentAlignment = Alignment.TopCenter,
@@ -85,11 +86,19 @@ fun ResultadoScreen(viewModel: ResultadoViewModel, onGuardado: () -> Unit, onVol
                 BotonGuardar(
                     guardando = guardando,
                     mensaje = mensaje,
-                    onGuardar = { viewModel.guardar({ guardado = true }) },
+                    onGuardar = {
+                        if (viewModel.validarFormulario()) viewModel.guardar { guardado = true }
+                    },
                 )
             }
         }
     }
 
-    ConfirmacionGuardado(visible = guardado, onContinuar = onGuardado)
+    ConfirmacionGuardado(
+        visible = guardado,
+        onContinuar = {
+            guardado = false
+            mainViewModel.navigateBack()
+        },
+    )
 }

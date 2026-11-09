@@ -8,17 +8,19 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.oportunidades.model.data.local.OportunidadEntity
+import com.example.oportunidades.navigation.Screen
 import com.example.oportunidades.ui.components.*
 import com.example.oportunidades.ui.utils.obtenerAnchoContenido
-import com.example.oportunidades.viewmodel.GestionViewModel
+import com.example.oportunidades.viewmodel.*
 
 @Composable
 fun PendientesScreen(
     gestion: GestionViewModel,
-    mostrarAvisos: Boolean,
-    onAbrir: (OportunidadEntity) -> Unit,
+    perfilViewModel: PerfilViewModel,
+    oportunidadViewModel: OportunidadViewModel,
+    mainViewModel: MainViewModel,
 ) {
+    val mostrarAvisos by perfilViewModel.avisos.collectAsState()
     val lista by gestion.oportunidades.collectAsState()
     val gestiones by gestion.seguimientos.collectAsState()
     val resultados by gestion.resultados.collectAsState()
@@ -46,7 +48,14 @@ fun PendientesScreen(
                     avisos.forEach { (o, texto) ->
                         Text(o.nombre, style = MaterialTheme.typography.titleMedium)
                         Text(texto)
-                        TextButton(onClick = { onAbrir(o) }) { Text("Abrir oportunidad") }
+                        TextButton(
+                            onClick = {
+                                oportunidadViewModel.cargar(o)
+                                mainViewModel.navigateTo(Screen.Detalle, singleTop = true)
+                            }
+                        ) {
+                            Text("Abrir oportunidad")
+                        }
                         HorizontalDivider()
                     }
                 }

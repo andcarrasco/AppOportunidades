@@ -9,25 +9,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.oportunidades.model.*
-import com.example.oportunidades.model.data.local.OrganizacionEntity
 import com.example.oportunidades.ui.components.*
 import com.example.oportunidades.ui.utils.obtenerAnchoContenido
-import com.example.oportunidades.viewmodel.ContactoViewModel
+import com.example.oportunidades.viewmodel.*
 
 @Composable
 fun ContactoScreen(
     viewModel: ContactoViewModel,
-    organizaciones: List<OrganizacionEntity>,
-    onGuardado: () -> Unit,
-    onVolver: () -> Unit,
+    organizacionViewModel: OrganizacionViewModel,
+    mainViewModel: MainViewModel,
 ) {
+    val organizaciones by organizacionViewModel.registros.collectAsState()
     val estado by viewModel.estado.collectAsState()
     val guardando by viewModel.guardando.collectAsState()
     val mensaje by viewModel.mensaje.collectAsState()
     val anchoContenido = obtenerAnchoContenido()
     var guardado by remember { mutableStateOf(false) }
 
-    Scaffold(topBar = { BarraTitulo("Contacto", onVolver) }) { padding ->
+    Scaffold(topBar = { BarraTitulo("Contacto") { mainViewModel.navigateBack() } }) { padding ->
         Box(
             modifier = Modifier.padding(padding).fillMaxSize(),
             contentAlignment = Alignment.TopCenter,
@@ -100,11 +99,19 @@ fun ContactoScreen(
                 BotonGuardar(
                     guardando = guardando,
                     mensaje = mensaje,
-                    onGuardar = { viewModel.guardar({ guardado = true }) },
+                    onGuardar = {
+                        if (viewModel.validarFormulario()) viewModel.guardar { guardado = true }
+                    },
                 )
             }
         }
     }
 
-    ConfirmacionGuardado(visible = guardado, onContinuar = onGuardado)
+    ConfirmacionGuardado(
+        visible = guardado,
+        onContinuar = {
+            guardado = false
+            mainViewModel.navigateBack()
+        },
+    )
 }
