@@ -3,173 +3,198 @@ package com.example.oportunidades.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.oportunidades.model.*
-import com.example.oportunidades.model.data.local.*
+import com.example.oportunidades.model.OrganizacionErrores
+import com.example.oportunidades.model.OrganizacionUiState
+import com.example.oportunidades.model.data.local.AppDatabase
+import com.example.oportunidades.model.data.local.OrganizacionEntity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class OrganizacionViewModel(app: Application) : AndroidViewModel(app) {
+
     private val dao = AppDatabase.getDatabase(app).organizacionDao()
+
+    // Estado interno mutable
     private val _estado = MutableStateFlow(OrganizacionUiState())
+
+    // Estado expuesto para la UI
     val estado: StateFlow<OrganizacionUiState> = _estado
+
+    // Organizaciones guardadas en Room
     private val _registros = MutableStateFlow<List<OrganizacionEntity>>(emptyList())
     val registros: StateFlow<List<OrganizacionEntity>> = _registros
-    private val _guardando = MutableStateFlow(false)
-    val guardando: StateFlow<Boolean> = _guardando
-    private val _mensaje = MutableStateFlow("")
-    val mensaje: StateFlow<String> = _mensaje
-    private val _cargando = MutableStateFlow(true)
-    val cargando: StateFlow<Boolean> = _cargando
 
     init {
         viewModelScope.launch {
-            try {
-                dao.obtenerTodos().collect {
-                    _registros.value = it
-                    _cargando.value = false
-                }
-            } catch (e: Exception) {
-                _cargando.value = false
-                _mensaje.value = "No se pudieron cargar los registros"
+            dao.obtenerTodos().collect { lista ->
+                _registros.value = lista
             }
         }
     }
 
+    // Limpia el formulario para un registro nuevo
     fun nuevo() {
         _estado.value = OrganizacionUiState()
-        _mensaje.value = ""
     }
 
+    // Carga un registro guardado para editarlo
     fun cargar(registro: OrganizacionEntity) {
-        _estado.value =
-            OrganizacionUiState(
-                id = registro.id,
-                nombre = registro.nombre,
-                tipo = registro.tipo,
-                rubro = registro.rubro,
-                comuna = registro.comuna,
-                region = registro.region,
-                sitioWeb = registro.sitioWeb,
-                publico = registro.publico,
-                observaciones = registro.observaciones,
-            )
-        _mensaje.value = ""
+        _estado.value = OrganizacionUiState(
+            id = registro.id,
+            nombre = registro.nombre,
+            tipo = registro.tipo,
+            rubro = registro.rubro,
+            comuna = registro.comuna,
+            region = registro.region,
+            sitioWeb = registro.sitioWeb,
+            publico = registro.publico,
+            observaciones = registro.observaciones
+        )
     }
 
-    // Nombre de la organización asociada a un registro, para mostrarlo en otras pantallas.
-    fun nombre(lista: List<OrganizacionEntity>, organizacionId: String): String =
-        lista.find { it.id.toString() == organizacionId }?.nombre ?: "Sin organización"
+    // Nombre de una organización, para mostrarlo en otras pantallas
+    fun nombre(lista: List<OrganizacionEntity>, organizacionId: String): String {
+        return lista.find { it.id.toString() == organizacionId }?.nombre ?: "Sin organización"
+    }
 
+    // Actualiza el campo nombre y limpia su error
     fun onNombreChange(valor: String) {
-        _estado.update { it.copy(nombre = valor, errores = it.errores.copy(nombre = null)) }
+        _estado.update {
+            it.copy(
+                nombre = valor,
+                errores = it.errores.copy(nombre = null)
+            )
+        }
     }
 
     fun onTipoChange(valor: String) {
-        _estado.update { it.copy(tipo = valor, errores = it.errores.copy(tipo = null)) }
+        _estado.update {
+            it.copy(
+                tipo = valor,
+                errores = it.errores.copy(tipo = null)
+            )
+        }
     }
 
     fun onRubroChange(valor: String) {
-        _estado.update { it.copy(rubro = valor, errores = it.errores.copy(rubro = null)) }
+        _estado.update {
+            it.copy(
+                rubro = valor,
+                errores = it.errores.copy(rubro = null)
+            )
+        }
     }
 
     fun onComunaChange(valor: String) {
-        _estado.update { it.copy(comuna = valor, errores = it.errores.copy(comuna = null)) }
+        _estado.update {
+            it.copy(
+                comuna = valor,
+                errores = it.errores.copy(comuna = null)
+            )
+        }
     }
 
     fun onRegionChange(valor: String) {
-        _estado.update { it.copy(region = valor, errores = it.errores.copy(region = null)) }
+        _estado.update {
+            it.copy(
+                region = valor,
+                errores = it.errores.copy(region = null)
+            )
+        }
     }
 
     fun onSitioWebChange(valor: String) {
-        _estado.update { it.copy(sitioWeb = valor, errores = it.errores.copy(sitioWeb = null)) }
+        _estado.update {
+            it.copy(
+                sitioWeb = valor,
+                errores = it.errores.copy(sitioWeb = null)
+            )
+        }
     }
 
     fun onPublicoChange(valor: String) {
-        _estado.update { it.copy(publico = valor, errores = it.errores.copy(publico = null)) }
+        _estado.update {
+            it.copy(
+                publico = valor,
+                errores = it.errores.copy(publico = null)
+            )
+        }
     }
 
     fun onObservacionesChange(valor: String) {
         _estado.update {
-            it.copy(observaciones = valor, errores = it.errores.copy(observaciones = null))
+            it.copy(
+                observaciones = valor,
+                errores = it.errores.copy(observaciones = null)
+            )
         }
     }
 
     // Validación global del formulario
     fun validarFormulario(): Boolean {
-        val errores = validarDatos(_estado.value)
-        val hayErrores =
-            listOfNotNull(
-                    errores.nombre,
-                    errores.tipo,
-                    errores.rubro,
-                    errores.comuna,
-                    errores.region,
-                    errores.sitioWeb,
-                    errores.publico,
-                    errores.observaciones,
-                )
-                .isNotEmpty()
-        _estado.update { it.copy(errores = errores) }
+        val estadoActual = _estado.value
+
+        val errores = OrganizacionErrores(
+            nombre = if (estadoActual.nombre.isBlank())
+                "Campo obligatorio"
+            else null,
+
+            tipo = if (estadoActual.tipo.isBlank())
+                "Campo obligatorio"
+            else null,
+
+            comuna = if (estadoActual.comuna.isBlank())
+                "Campo obligatorio"
+            else null,
+
+            region = if (estadoActual.region.isBlank())
+                "Campo obligatorio"
+            else null
+        )
+
+        val hayErrores = listOfNotNull(
+            errores.nombre,
+            errores.tipo,
+            errores.rubro,
+            errores.comuna,
+            errores.region,
+            errores.sitioWeb,
+            errores.publico,
+            errores.observaciones
+        ).isNotEmpty()
+
+        _estado.update {
+            it.copy(errores = errores)
+        }
+
         return !hayErrores
     }
 
-    // Guarda en Room. La pantalla ejecuta validarFormulario() antes de llamar a guardar().
+    // Guarda en Room: inserta si es nuevo o modifica si ya existe
     fun guardar(onListo: () -> Unit) {
-        if (_guardando.value) return
         val a = _estado.value
-        _guardando.value = true
-        _mensaje.value = ""
+        val organizacion = OrganizacionEntity(
+            id = a.id,
+            nombre = a.nombre,
+            tipo = a.tipo,
+            rubro = a.rubro,
+            comuna = a.comuna,
+            region = a.region,
+            sitioWeb = a.sitioWeb,
+            publico = a.publico,
+            observaciones = a.observaciones
+        )
+
         viewModelScope.launch {
-            try {
-                val registro =
-                    OrganizacionEntity(
-                        id = a.id,
-                        nombre = a.nombre.trim(),
-                        tipo = a.tipo.trim(),
-                        rubro = a.rubro.trim(),
-                        comuna = a.comuna.trim(),
-                        region = a.region.trim(),
-                        sitioWeb = a.sitioWeb.trim(),
-                        publico = a.publico.trim(),
-                        observaciones = a.observaciones.trim(),
-                    )
-                val guardadoId =
-                    if (a.id == 0L) dao.insertar(registro)
-                    else {
-                        dao.modificar(
-                            id = a.id,
-                            nombre = registro.nombre,
-                            tipo = registro.tipo,
-                            rubro = registro.rubro,
-                            comuna = registro.comuna,
-                            region = registro.region,
-                            sitioWeb = registro.sitioWeb,
-                            publico = registro.publico,
-                            observaciones = registro.observaciones,
-                        )
-                        a.id
-                    }
-
-                _estado.update { it.copy(id = guardadoId) }
-                onListo()
-            } catch (e: Exception) {
-                _mensaje.value =
-                    "No se pudo completar el guardado. Revisa los datos e intenta nuevamente."
-            } finally {
-                _guardando.value = false
+            if (a.id == 0L) {
+                val id = dao.insertar(organizacion)
+                _estado.update { it.copy(id = id) }
+            } else {
+                dao.modificar(organizacion)
             }
+            onListo()
         }
-    }
-
-    companion object {
-        fun validarDatos(estadoActual: OrganizacionUiState): OrganizacionErrores =
-            OrganizacionErrores(
-                nombre = if (estadoActual.nombre.isBlank()) "Campo obligatorio" else null,
-                tipo = if (estadoActual.tipo.isBlank()) "Campo obligatorio" else null,
-                comuna = if (estadoActual.comuna.isBlank()) "Campo obligatorio" else null,
-                region = if (estadoActual.region.isBlank()) "Campo obligatorio" else null,
-            )
     }
 }

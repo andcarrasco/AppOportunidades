@@ -6,21 +6,20 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class QrTest {
+
     @Test
     fun leeUnaLineaPorCampoAunqueTengaTildesOMayusculas() {
-        val campos =
-            QrViewModel.leerCampos(
-                """
-                Nombre: Feria Demo
-                Tipo de evento: Feria empresarial
-                Región = Metropolitana
-                Fecha inicio: 2026-12-01
-                Hora: 09:30
-                Organización: Empresa Demo
-                Dato desconocido: se ignora
-                """
-                    .trimIndent()
-            )
+        val campos = QrViewModel.leerCampos(
+            """
+            Nombre: Feria Demo
+            Tipo de evento: Feria empresarial
+            Región = Metropolitana
+            Fecha inicio: 2026-12-01
+            Hora: 09:30
+            Organización: Empresa Demo
+            Dato desconocido: se ignora
+            """.trimIndent()
+        )
 
         assertEquals("Feria Demo", campos["nombre"])
         assertEquals("Feria empresarial", campos["tipo"])
@@ -35,7 +34,7 @@ class QrTest {
     fun unTextoSinCamposSeUsaComoDescripcion() {
         assertEquals(
             mapOf("descripcion" to "https://example.com/evento"),
-            QrViewModel.leerCampos("https://example.com/evento"),
+            QrViewModel.leerCampos("https://example.com/evento")
         )
         assertTrue(QrViewModel.leerCampos("   ").isEmpty())
     }

@@ -1,4 +1,6 @@
 package com.example.oportunidades.model
+
+// Modelo que representa el estado de los filtros de búsqueda
 data class FiltrosUiState(
     val nombre: String = "",
     val fecha: String = "",
@@ -9,5 +11,5 @@ data class FiltrosUiState(
     val prioridad: String = "",
     val responsable: String = "",
     val organizacionId: String = "",
-    val errores: FiltrosErrores = FiltrosErrores(),
+    val errores: FiltrosErrores = FiltrosErrores() // Objeto que contiene los errores por campo
 )

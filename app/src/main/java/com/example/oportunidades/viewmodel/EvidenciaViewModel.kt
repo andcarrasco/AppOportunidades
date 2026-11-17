@@ -5,15 +5,20 @@ import android.net.Uri
 import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import com.example.oportunidades.model.EvidenciaUiState
-import java.io.File
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import java.io.File
 
-// Fotografías de evidencia de cada oportunidad, guardadas con FileProvider (guía 13).
+// Fotografías de evidencia de cada oportunidad, guardadas con FileProvider
 class EvidenciaViewModel(app: Application) : AndroidViewModel(app) {
+
+    // Estado interno mutable
     private val _estado = MutableStateFlow(EvidenciaUiState())
+
+    // Estado expuesto para la UI
     val estado: StateFlow<EvidenciaUiState> = _estado
+
     private var capturaPendiente: Uri? = null
     private var oportunidadCaptura: Long = 0
 
@@ -27,8 +32,15 @@ class EvidenciaViewModel(app: Application) : AndroidViewModel(app) {
         return FileProvider.getUriForFile(context, context.packageName + ".fileprovider", archivo)
     }
 
+    // Lee las fotografías guardadas de una oportunidad
     fun cargar(oportunidadId: Long) {
-        _estado.update { it.copy(oportunidadId = oportunidadId, imagenes = emptyList(), mensaje = "") }
+        _estado.update {
+            it.copy(
+                oportunidadId = oportunidadId,
+                imagenes = emptyList(),
+                mensaje = ""
+            )
+        }
         try {
             val archivos = carpeta(oportunidadId).listFiles() ?: emptyArray()
             val imagenes = mutableListOf<Uri>()
@@ -43,24 +55,26 @@ class EvidenciaViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    // Crea el archivo temporal donde la cámara guardará la fotografía.
+    // Crea el archivo temporal donde la cámara guardará la fotografía
     fun prepararCaptura(): Uri? {
-        if (_estado.value.capturando) return null
-        try {
+        if (_estado.value.capturando) {
+            return null
+        }
+        return try {
             oportunidadCaptura = _estado.value.oportunidadId
             val destino = carpeta(oportunidadCaptura)
             check(destino.isDirectory || destino.mkdirs())
             val captura = uri(File.createTempFile("pendiente_", ".jpg", destino))
             capturaPendiente = captura
             _estado.update { it.copy(capturando = true, mensaje = "") }
-            return captura
+            captura
         } catch (e: Exception) {
             mensaje("No se pudo preparar el archivo de la fotografía")
-            return null
+            null
         }
     }
 
-    // Confirma la fotografía si la cámara la entregó, o elimina el archivo si se canceló.
+    // Confirma la fotografía si la cámara la entregó, o elimina el archivo si se canceló
     fun finalizarCaptura(aceptada: Boolean) {
         val captura = capturaPendiente
         if (captura == null) {
@@ -79,8 +93,7 @@ class EvidenciaViewModel(app: Application) : AndroidViewModel(app) {
                     archivo.delete()
                     error("La cámara no entregó una imagen")
                 }
-                val confirmada =
-                    File(archivo.parentFile, "foto_" + nombre.removePrefix("pendiente_"))
+                val confirmada = File(archivo.parentFile, "foto_" + nombre.removePrefix("pendiente_"))
                 check(archivo.renameTo(confirmada))
             }
             cargar(_estado.value.oportunidadId)

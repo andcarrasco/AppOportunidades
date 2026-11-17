@@ -13,5 +13,5 @@ data class OrganizacionEntity(
     val region: String = "",
     val sitioWeb: String = "",
     val publico: String = "",
-    val observaciones: String = "",
+    val observaciones: String = ""
 )

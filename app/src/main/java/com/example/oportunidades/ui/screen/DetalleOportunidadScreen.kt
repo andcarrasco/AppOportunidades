@@ -1,17 +1,36 @@
 package com.example.oportunidades.ui.screen
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.oportunidades.navigation.Screen
-import com.example.oportunidades.ui.components.*
+import com.example.oportunidades.ui.components.BarraTitulo
+import com.example.oportunidades.ui.components.EvidenciasOportunidad
 import com.example.oportunidades.ui.utils.obtenerAnchoContenido
-import com.example.oportunidades.viewmodel.*
+import com.example.oportunidades.viewmodel.ContactoViewModel
+import com.example.oportunidades.viewmodel.EvidenciaViewModel
+import com.example.oportunidades.viewmodel.MainViewModel
+import com.example.oportunidades.viewmodel.OportunidadViewModel
+import com.example.oportunidades.viewmodel.OrganizacionViewModel
+import com.example.oportunidades.viewmodel.ResultadoViewModel
+import com.example.oportunidades.viewmodel.SeguimientoViewModel
 
 @Composable
 fun DetalleOportunidadScreen(
@@ -21,7 +40,7 @@ fun DetalleOportunidadScreen(
     seguimientoViewModel: SeguimientoViewModel,
     resultadoViewModel: ResultadoViewModel,
     evidenciaViewModel: EvidenciaViewModel,
-    mainViewModel: MainViewModel,
+    mainViewModel: MainViewModel
 ) {
     val ficha by viewModel.ficha.collectAsState()
     val organizaciones by organizacionViewModel.registros.collectAsState()
@@ -33,22 +52,30 @@ fun DetalleOportunidadScreen(
         topBar = { BarraTitulo("Detalle de oportunidad") { mainViewModel.navigateBack() } }
     ) { padding ->
         Box(
-            modifier = Modifier.padding(padding).fillMaxSize(),
-            contentAlignment = Alignment.TopCenter,
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize(),
+            contentAlignment = Alignment.TopCenter
         ) {
             Column(
-                modifier =
-                    Modifier.fillMaxWidth(anchoContenido)
-                        .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                Modifier
+                    .fillMaxWidth(anchoContenido)
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                // Se muestra la ficha guardada en Room
                 val o = ficha
                 if (o == null) {
                     Text("Cargando la ficha guardada…")
                     return@Column
                 }
-                Text(o.nombre, style = MaterialTheme.typography.headlineMedium)
+
+                Text(
+                    o.nombre,
+                    style = MaterialTheme.typography.headlineMedium
+                )
+
                 Button(
                     onClick = {
                         viewModel.editarFicha()
@@ -57,6 +84,7 @@ fun DetalleOportunidadScreen(
                 ) {
                     Text("Editar datos, prioridad o estado")
                 }
+
                 OutlinedButton(
                     onClick = {
                         seguimientoViewModel.nuevo(o.id.toString())
@@ -65,11 +93,13 @@ fun DetalleOportunidadScreen(
                 ) {
                     Text("Registrar gestión o propuesta")
                 }
+
                 OutlinedButton(
                     onClick = { mainViewModel.navigateTo(Screen.Historial, singleTop = true) }
                 ) {
                     Text("Consultar historial")
                 }
+
                 OutlinedButton(
                     onClick = {
                         resultadoViewModel.abrir(o.id)
@@ -78,9 +108,8 @@ fun DetalleOportunidadScreen(
                 ) {
                     Text("Resultado de activación")
                 }
-                Text(
-                    "Organización: ${organizacionViewModel.nombre(organizaciones, o.organizacionId)}"
-                )
+
+                Text("Organización: ${organizacionViewModel.nombre(organizaciones, o.organizacionId)}")
                 Text("Nombre de la oportunidad: ${o.nombre}")
                 Text("Tipo de evento: ${o.tipo}")
                 Text("Descripción: ${o.descripcion}")
@@ -104,22 +133,26 @@ fun DetalleOportunidadScreen(
                 Text("Espacios disponibles: ${o.espacios}")
                 Text("Observaciones: ${o.observaciones}")
                 Text("Última actualización: ${o.actualizacion}")
+
                 HorizontalDivider()
                 EvidenciasOportunidad(o.id, evidenciaViewModel)
                 HorizontalDivider()
-                Text("Contactos corporativos", style = MaterialTheme.typography.titleLarge)
-                contactoViewModel.deOrganizacion(contactos, o.organizacionId).forEach { c ->
-                    Text("${c.nombre} · ${c.cargo} · ${c.area}\n${c.correo} · ${c.telefono}")
+
+                Text(
+                    "Contactos corporativos",
+                    style = MaterialTheme.typography.titleLarge
+                )
+                contactoViewModel.deOrganizacion(contactos, o.organizacionId).forEach { contacto ->
+                    Text("${contacto.nombre} · ${contacto.cargo} · ${contacto.area}\n${contacto.correo} · ${contacto.telefono}")
                 }
-                resultadoViewModel.deOportunidad(resultados, o.id).forEach { r ->
+
+                resultadoViewModel.deOportunidad(resultados, o.id).forEach { resultado ->
                     Text(
-                        "Resultado: ${r.estado} · ${r.fecha}",
-                        style = MaterialTheme.typography.titleLarge,
+                        "Resultado: ${resultado.estado} · ${resultado.fecha}",
+                        style = MaterialTheme.typography.titleLarge
                     )
-                    Text(
-                        "Asistentes: ${r.asistentes} · Contactos: ${r.contactos} · Interesados: ${r.interesados} · Inscripciones: ${r.inscripciones}"
-                    )
-                    Text(r.observaciones)
+                    Text("Asistentes: ${resultado.asistentes} · Contactos: ${resultado.contactos} · Interesados: ${resultado.interesados} · Inscripciones: ${resultado.inscripciones}")
+                    Text(resultado.observaciones)
                 }
             }
         }

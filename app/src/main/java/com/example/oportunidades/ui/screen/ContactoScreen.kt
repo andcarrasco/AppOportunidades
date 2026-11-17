@@ -1,108 +1,193 @@
 package com.example.oportunidades.ui.screen
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.oportunidades.model.*
-import com.example.oportunidades.ui.components.*
+import com.example.oportunidades.model.Catalogos
+import com.example.oportunidades.ui.components.BarraTitulo
+import com.example.oportunidades.ui.components.ConfirmacionGuardado
+import com.example.oportunidades.ui.components.Selector
 import com.example.oportunidades.ui.utils.obtenerAnchoContenido
-import com.example.oportunidades.viewmodel.*
+import com.example.oportunidades.viewmodel.ContactoViewModel
+import com.example.oportunidades.viewmodel.MainViewModel
+import com.example.oportunidades.viewmodel.OrganizacionViewModel
 
 @Composable
 fun ContactoScreen(
     viewModel: ContactoViewModel,
     organizacionViewModel: OrganizacionViewModel,
-    mainViewModel: MainViewModel,
+    mainViewModel: MainViewModel
 ) {
-    val organizaciones by organizacionViewModel.registros.collectAsState()
     val estado by viewModel.estado.collectAsState()
-    val guardando by viewModel.guardando.collectAsState()
-    val mensaje by viewModel.mensaje.collectAsState()
+    val organizaciones by organizacionViewModel.registros.collectAsState()
     val anchoContenido = obtenerAnchoContenido()
     var guardado by remember { mutableStateOf(false) }
 
-    Scaffold(topBar = { BarraTitulo("Contacto") { mainViewModel.navigateBack() } }) { padding ->
+    Scaffold(
+        topBar = { BarraTitulo("Contacto") { mainViewModel.navigateBack() } }
+    ) { padding ->
         Box(
-            modifier = Modifier.padding(padding).fillMaxSize(),
-            contentAlignment = Alignment.TopCenter,
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize(),
+            contentAlignment = Alignment.TopCenter
         ) {
             Column(
-                modifier =
-                    Modifier.fillMaxWidth(anchoContenido)
-                        .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                Modifier
+                    .fillMaxWidth(anchoContenido)
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
                     "Utiliza únicamente información ficticia.",
-                    style = MaterialTheme.typography.bodySmall,
-                )
-                Selector(
-                    "Organización",
-                    estado.organizacionId,
-                    organizaciones.map { it.id.toString() to it.nombre },
-                    estado.errores.organizacionId,
-                    viewModel::onOrganizacionIdChange,
-                )
-                CampoTexto(
-                    "Nombre ficticio",
-                    estado.nombre,
-                    estado.errores.nombre,
-                    viewModel::onNombreChange,
-                )
-                CampoTexto("Cargo", estado.cargo, estado.errores.cargo, viewModel::onCargoChange)
-                Selector(
-                    "Área",
-                    estado.area,
-                    Catalogos.areas.map { it to it },
-                    estado.errores.area,
-                    viewModel::onAreaChange,
-                )
-                CampoTexto(
-                    "Correo ficticio",
-                    estado.correo,
-                    estado.errores.correo,
-                    viewModel::onCorreoChange,
-                )
-                CampoTexto(
-                    "Teléfono ficticio",
-                    estado.telefono,
-                    estado.errores.telefono,
-                    viewModel::onTelefonoChange,
-                )
-                Selector(
-                    "Medio preferente",
-                    estado.medio,
-                    listOf("Correo", "Teléfono", "Reunión").map { it to it },
-                    estado.errores.medio,
-                    viewModel::onMedioChange,
-                )
-                Selector(
-                    "Estado del contacto",
-                    estado.estado,
-                    listOf("Pendiente", "Contactado", "Sin respuesta").map { it to it },
-                    estado.errores.estado,
-                    viewModel::onEstadoChange,
-                )
-                CampoTexto(
-                    "Observaciones",
-                    estado.observaciones,
-                    estado.errores.observaciones,
-                    viewModel::onObservacionesChange,
+                    style = MaterialTheme.typography.bodySmall
                 )
 
-                BotonGuardar(
-                    guardando = guardando,
-                    mensaje = mensaje,
-                    onGuardar = {
-                        if (viewModel.validarFormulario()) viewModel.guardar { guardado = true }
-                    },
+                Selector(
+                    etiqueta = "Organización",
+                    valor = estado.organizacionId,
+                    opciones = organizaciones.map { it.id.toString() to it.nombre },
+                    error = estado.errores.organizacionId,
+                    onChange = viewModel::onOrganizacionIdChange
                 )
+
+                OutlinedTextField(
+                    value = estado.nombre,
+                    onValueChange = viewModel::onNombreChange,
+                    label = { Text("Nombre ficticio") },
+                    isError = estado.errores.nombre != null,
+                    supportingText = {
+                        estado.errores.nombre?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = estado.cargo,
+                    onValueChange = viewModel::onCargoChange,
+                    label = { Text("Cargo") },
+                    isError = estado.errores.cargo != null,
+                    supportingText = {
+                        estado.errores.cargo?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Selector(
+                    etiqueta = "Área",
+                    valor = estado.area,
+                    opciones = Catalogos.areas.map { it to it },
+                    error = estado.errores.area,
+                    onChange = viewModel::onAreaChange
+                )
+
+                OutlinedTextField(
+                    value = estado.correo,
+                    onValueChange = viewModel::onCorreoChange,
+                    label = { Text("Correo ficticio") },
+                    isError = estado.errores.correo != null,
+                    supportingText = {
+                        estado.errores.correo?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = estado.telefono,
+                    onValueChange = viewModel::onTelefonoChange,
+                    label = { Text("Teléfono ficticio") },
+                    isError = estado.errores.telefono != null,
+                    supportingText = {
+                        estado.errores.telefono?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Selector(
+                    etiqueta = "Medio preferente",
+                    valor = estado.medio,
+                    opciones = Catalogos.medios.map { it to it },
+                    error = estado.errores.medio,
+                    onChange = viewModel::onMedioChange
+                )
+
+                Selector(
+                    etiqueta = "Estado del contacto",
+                    valor = estado.estado,
+                    opciones = Catalogos.estadosContacto.map { it to it },
+                    error = estado.errores.estado,
+                    onChange = viewModel::onEstadoChange
+                )
+
+                OutlinedTextField(
+                    value = estado.observaciones,
+                    onValueChange = viewModel::onObservacionesChange,
+                    label = { Text("Observaciones") },
+                    isError = estado.errores.observaciones != null,
+                    supportingText = {
+                        estado.errores.observaciones?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // Botón: guardar
+                Button(
+                    onClick = {
+                        if (viewModel.validarFormulario()) {
+                            viewModel.guardar {
+                                guardado = true
+                            }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Guardar")
+                }
             }
         }
     }
@@ -112,6 +197,6 @@ fun ContactoScreen(
         onContinuar = {
             guardado = false
             mainViewModel.navigateBack()
-        },
+        }
     )
 }

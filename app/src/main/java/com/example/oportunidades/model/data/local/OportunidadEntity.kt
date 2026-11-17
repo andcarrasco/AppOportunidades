@@ -29,5 +29,5 @@ data class OportunidadEntity(
     val costos: String = "",
     val espacios: String = "",
     val observaciones: String = "",
-    val actualizacion: String = "",
+    val actualizacion: String = ""
 )

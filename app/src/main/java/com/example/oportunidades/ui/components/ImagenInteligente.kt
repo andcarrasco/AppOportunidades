@@ -13,10 +13,18 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 
+// Muestra la imagen del perfil o un ícono si todavía no hay imagen
 @Composable
-fun ImagenInteligente(uri: Uri?, onError: () -> Unit) {
+fun ImagenInteligente(
+    uri: Uri?,
+    onError: () -> Unit
+) {
     if (uri == null) {
-        Icon(Icons.Default.Person, "Perfil de demostración", Modifier.size(140.dp))
+        Icon(
+            Icons.Default.Person,
+            contentDescription = "Perfil de demostración",
+            modifier = Modifier.size(140.dp)
+        )
     } else {
         AndroidView(
             factory = { context ->
@@ -25,14 +33,16 @@ fun ImagenInteligente(uri: Uri?, onError: () -> Unit) {
                 imagen.contentDescription = "Imagen ficticia del perfil"
                 imagen
             },
-            modifier = Modifier.size(140.dp).clip(CircleShape),
+            modifier = Modifier
+                .size(140.dp)
+                .clip(CircleShape),
             update = { imagen ->
                 try {
                     imagen.setImageURI(uri)
                 } catch (e: Exception) {
                     onError()
                 }
-            },
+            }
         )
     }
 }

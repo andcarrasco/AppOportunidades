@@ -10,19 +10,20 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 
-// Centraliza la navegación de la app mediante eventos (guía 10).
+// Centraliza la navegación de la app mediante eventos
 class MainViewModel : ViewModel() {
 
     private val _navigationEvents = MutableSharedFlow<NavigationEvent>()
-    // Expone el flujo de solo lectura para que la UI pueda observarlo.
+
+    // Expone el flujo de solo lectura para que la UI pueda observarlo
     val navigationEvents: SharedFlow<NavigationEvent> = _navigationEvents.asSharedFlow()
 
-    // Función que emite el evento de navegación hacia la ruta deseada.
+    // Emite el evento de navegación hacia la ruta deseada
     fun navigateTo(
         screen: Screen,
         popUpToRoute: Screen? = null,
         inclusive: Boolean = false,
-        singleTop: Boolean = false,
+        singleTop: Boolean = false
     ) {
         CoroutineScope(Dispatchers.Main).launch {
             _navigationEvents.emit(
@@ -30,20 +31,20 @@ class MainViewModel : ViewModel() {
                     route = screen,
                     popUpToRoute = popUpToRoute,
                     inclusive = inclusive,
-                    singleTop = singleTop,
+                    singleTop = singleTop
                 )
             )
         }
     }
 
-    // Función para volver atrás.
+    // Vuelve a la pantalla anterior
     fun navigateBack() {
         CoroutineScope(Dispatchers.Main).launch {
             _navigationEvents.emit(NavigationEvent.PopBackStack)
         }
     }
 
-    // Función para navegar hacia arriba (padre).
+    // Navega hacia arriba (pantalla padre)
     fun navigateUp() {
         CoroutineScope(Dispatchers.Main).launch {
             _navigationEvents.emit(NavigationEvent.NavigateUp)

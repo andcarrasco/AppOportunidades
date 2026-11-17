@@ -1,209 +1,415 @@
 package com.example.oportunidades.ui.screen
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.oportunidades.model.*
-import com.example.oportunidades.ui.components.*
-import com.example.oportunidades.ui.utils.obtenerAnchoContenido
+import com.example.oportunidades.model.Catalogos
 import com.example.oportunidades.navigation.Screen
-import com.example.oportunidades.viewmodel.*
+import com.example.oportunidades.ui.components.BarraTitulo
+import com.example.oportunidades.ui.components.Selector
+import com.example.oportunidades.ui.utils.obtenerAnchoContenido
+import com.example.oportunidades.viewmodel.MainViewModel
+import com.example.oportunidades.viewmodel.OportunidadViewModel
+import com.example.oportunidades.viewmodel.OrganizacionViewModel
 
 @Composable
 fun OportunidadScreen(
     viewModel: OportunidadViewModel,
     organizacionViewModel: OrganizacionViewModel,
-    mainViewModel: MainViewModel,
+    mainViewModel: MainViewModel
 ) {
-    val organizaciones by organizacionViewModel.registros.collectAsState()
     val estado by viewModel.estado.collectAsState()
-    val guardando by viewModel.guardando.collectAsState()
-    val mensaje by viewModel.mensaje.collectAsState()
+    val organizaciones by organizacionViewModel.registros.collectAsState()
     val anchoContenido = obtenerAnchoContenido()
 
-    Scaffold(topBar = { BarraTitulo("Oportunidad") { mainViewModel.navigateBack() } }) { padding ->
+    Scaffold(
+        topBar = { BarraTitulo("Oportunidad") { mainViewModel.navigateBack() } }
+    ) { padding ->
         Box(
-            modifier = Modifier.padding(padding).fillMaxSize(),
-            contentAlignment = Alignment.TopCenter,
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize(),
+            contentAlignment = Alignment.TopCenter
         ) {
             Column(
-                modifier =
-                    Modifier.fillMaxWidth(anchoContenido)
-                        .verticalScroll(rememberScrollState())
-                        .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                Modifier
+                    .fillMaxWidth(anchoContenido)
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
                     "Utiliza únicamente información ficticia.",
-                    style = MaterialTheme.typography.bodySmall,
-                )
-                CampoTexto(
-                    "Nombre de la oportunidad",
-                    estado.nombre,
-                    estado.errores.nombre,
-                    viewModel::onNombreChange,
-                )
-                Selector(
-                    "Tipo de evento",
-                    estado.tipo,
-                    Catalogos.eventos.map { it to it },
-                    estado.errores.tipo,
-                    viewModel::onTipoChange,
-                )
-                CampoTexto(
-                    "Descripción",
-                    estado.descripcion,
-                    estado.errores.descripcion,
-                    viewModel::onDescripcionChange,
-                )
-                CampoTexto(
-                    "Fuente de información",
-                    estado.fuente,
-                    estado.errores.fuente,
-                    viewModel::onFuenteChange,
-                )
-                CampoTexto(
-                    "Fecha de detección (AAAA-MM-DD)",
-                    estado.fechaDeteccion,
-                    estado.errores.fechaDeteccion,
-                    viewModel::onFechaDeteccionChange,
-                )
-                CampoTexto(
-                    "Responsable ficticio",
-                    estado.responsable,
-                    estado.errores.responsable,
-                    viewModel::onResponsableChange,
-                )
-                Selector(
-                    "Prioridad",
-                    estado.prioridad,
-                    Catalogos.prioridades.map { it to it },
-                    estado.errores.prioridad,
-                    viewModel::onPrioridadChange,
-                )
-                Selector(
-                    "Potencial comercial",
-                    estado.potencial,
-                    Catalogos.potenciales.map { it to it },
-                    estado.errores.potencial,
-                    viewModel::onPotencialChange,
-                )
-                Selector(
-                    "Estado de gestión",
-                    estado.estado,
-                    Catalogos.estados.map { it to it },
-                    estado.errores.estado,
-                    viewModel::onEstadoChange,
-                )
-                Selector(
-                    "Organización",
-                    estado.organizacionId,
-                    organizaciones.map { it.id.toString() to it.nombre },
-                    estado.errores.organizacionId,
-                    viewModel::onOrganizacionIdChange,
-                )
-                CampoTexto(
-                    "Fecha de inicio (AAAA-MM-DD)",
-                    estado.fechaInicio,
-                    estado.errores.fechaInicio,
-                    viewModel::onFechaInicioChange,
-                )
-                CampoTexto(
-                    "Fecha de término (AAAA-MM-DD)",
-                    estado.fechaTermino,
-                    estado.errores.fechaTermino,
-                    viewModel::onFechaTerminoChange,
-                )
-                CampoTexto(
-                    "Horario de inicio (HH:mm)",
-                    estado.horario,
-                    estado.errores.horario,
-                    viewModel::onHorarioChange,
-                )
-                CampoTexto(
-                    "Comuna",
-                    estado.comuna,
-                    estado.errores.comuna,
-                    viewModel::onComunaChange,
-                )
-                CampoTexto(
-                    "Región",
-                    estado.region,
-                    estado.errores.region,
-                    viewModel::onRegionChange,
-                )
-                CampoTexto(
-                    "Ubicación general del evento",
-                    estado.ubicacion,
-                    estado.errores.ubicacion,
-                    viewModel::onUbicacionChange,
-                )
-                Text(
-                    "Describe el público esperado y el público objetivo. En las observaciones puedes explicar su afinidad."
-                )
-                CampoTexto(
-                    "Público esperado y objetivo",
-                    estado.publico,
-                    estado.errores.publico,
-                    viewModel::onPublicoChange,
-                )
-                CampoTexto(
-                    "Asistentes estimados",
-                    estado.asistentes,
-                    estado.errores.asistentes,
-                    viewModel::onAsistentesChange,
-                )
-                CampoTexto(
-                    "Condiciones de participación",
-                    estado.condiciones,
-                    estado.errores.condiciones,
-                    viewModel::onCondicionesChange,
-                )
-                CampoTexto(
-                    "Requisitos",
-                    estado.requisitos,
-                    estado.errores.requisitos,
-                    viewModel::onRequisitosChange,
-                )
-                CampoTexto(
-                    "Costos referenciales ficticios",
-                    estado.costos,
-                    estado.errores.costos,
-                    viewModel::onCostosChange,
-                )
-                CampoTexto(
-                    "Espacios disponibles",
-                    estado.espacios,
-                    estado.errores.espacios,
-                    viewModel::onEspaciosChange,
-                )
-                CampoTexto(
-                    "Observaciones",
-                    estado.observaciones,
-                    estado.errores.observaciones,
-                    viewModel::onObservacionesChange,
+                    style = MaterialTheme.typography.bodySmall
                 )
 
-                BotonGuardar(
-                    guardando = guardando,
-                    mensaje = mensaje,
-                    onGuardar = {
+                // Datos generales de la oportunidad
+                OutlinedTextField(
+                    value = estado.nombre,
+                    onValueChange = viewModel::onNombreChange,
+                    label = { Text("Nombre de la oportunidad") },
+                    isError = estado.errores.nombre != null,
+                    supportingText = {
+                        estado.errores.nombre?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Selector(
+                    etiqueta = "Tipo de evento",
+                    valor = estado.tipo,
+                    opciones = Catalogos.eventos.map { it to it },
+                    error = estado.errores.tipo,
+                    onChange = viewModel::onTipoChange
+                )
+
+                OutlinedTextField(
+                    value = estado.descripcion,
+                    onValueChange = viewModel::onDescripcionChange,
+                    label = { Text("Descripción") },
+                    isError = estado.errores.descripcion != null,
+                    supportingText = {
+                        estado.errores.descripcion?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = estado.fuente,
+                    onValueChange = viewModel::onFuenteChange,
+                    label = { Text("Fuente de información") },
+                    isError = estado.errores.fuente != null,
+                    supportingText = {
+                        estado.errores.fuente?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = estado.fechaDeteccion,
+                    onValueChange = viewModel::onFechaDeteccionChange,
+                    label = { Text("Fecha de detección (AAAA-MM-DD)") },
+                    isError = estado.errores.fechaDeteccion != null,
+                    supportingText = {
+                        estado.errores.fechaDeteccion?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = estado.responsable,
+                    onValueChange = viewModel::onResponsableChange,
+                    label = { Text("Responsable ficticio") },
+                    isError = estado.errores.responsable != null,
+                    supportingText = {
+                        estado.errores.responsable?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // Gestión comercial
+                Selector(
+                    etiqueta = "Prioridad",
+                    valor = estado.prioridad,
+                    opciones = Catalogos.prioridades.map { it to it },
+                    error = estado.errores.prioridad,
+                    onChange = viewModel::onPrioridadChange
+                )
+
+                Selector(
+                    etiqueta = "Potencial comercial",
+                    valor = estado.potencial,
+                    opciones = Catalogos.potenciales.map { it to it },
+                    error = estado.errores.potencial,
+                    onChange = viewModel::onPotencialChange
+                )
+
+                Selector(
+                    etiqueta = "Estado de gestión",
+                    valor = estado.estado,
+                    opciones = Catalogos.estados.map { it to it },
+                    error = estado.errores.estado,
+                    onChange = viewModel::onEstadoChange
+                )
+
+                Selector(
+                    etiqueta = "Organización",
+                    valor = estado.organizacionId,
+                    opciones = organizaciones.map { it.id.toString() to it.nombre },
+                    error = estado.errores.organizacionId,
+                    onChange = viewModel::onOrganizacionIdChange
+                )
+
+                // Fecha y lugar del evento
+                OutlinedTextField(
+                    value = estado.fechaInicio,
+                    onValueChange = viewModel::onFechaInicioChange,
+                    label = { Text("Fecha de inicio (AAAA-MM-DD)") },
+                    isError = estado.errores.fechaInicio != null,
+                    supportingText = {
+                        estado.errores.fechaInicio?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = estado.fechaTermino,
+                    onValueChange = viewModel::onFechaTerminoChange,
+                    label = { Text("Fecha de término (AAAA-MM-DD)") },
+                    isError = estado.errores.fechaTermino != null,
+                    supportingText = {
+                        estado.errores.fechaTermino?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = estado.horario,
+                    onValueChange = viewModel::onHorarioChange,
+                    label = { Text("Horario de inicio (HH:mm)") },
+                    isError = estado.errores.horario != null,
+                    supportingText = {
+                        estado.errores.horario?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = estado.comuna,
+                    onValueChange = viewModel::onComunaChange,
+                    label = { Text("Comuna") },
+                    isError = estado.errores.comuna != null,
+                    supportingText = {
+                        estado.errores.comuna?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = estado.region,
+                    onValueChange = viewModel::onRegionChange,
+                    label = { Text("Región") },
+                    isError = estado.errores.region != null,
+                    supportingText = {
+                        estado.errores.region?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = estado.ubicacion,
+                    onValueChange = viewModel::onUbicacionChange,
+                    label = { Text("Ubicación general del evento") },
+                    isError = estado.errores.ubicacion != null,
+                    supportingText = {
+                        estado.errores.ubicacion?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // Público y condiciones
+                Text("Describe el público esperado y el público objetivo. En las observaciones puedes explicar su afinidad.")
+
+                OutlinedTextField(
+                    value = estado.publico,
+                    onValueChange = viewModel::onPublicoChange,
+                    label = { Text("Público esperado y objetivo") },
+                    isError = estado.errores.publico != null,
+                    supportingText = {
+                        estado.errores.publico?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = estado.asistentes,
+                    onValueChange = viewModel::onAsistentesChange,
+                    label = { Text("Asistentes estimados") },
+                    isError = estado.errores.asistentes != null,
+                    supportingText = {
+                        estado.errores.asistentes?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = estado.condiciones,
+                    onValueChange = viewModel::onCondicionesChange,
+                    label = { Text("Condiciones de participación") },
+                    isError = estado.errores.condiciones != null,
+                    supportingText = {
+                        estado.errores.condiciones?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = estado.requisitos,
+                    onValueChange = viewModel::onRequisitosChange,
+                    label = { Text("Requisitos") },
+                    isError = estado.errores.requisitos != null,
+                    supportingText = {
+                        estado.errores.requisitos?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = estado.costos,
+                    onValueChange = viewModel::onCostosChange,
+                    label = { Text("Costos referenciales ficticios") },
+                    isError = estado.errores.costos != null,
+                    supportingText = {
+                        estado.errores.costos?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = estado.espacios,
+                    onValueChange = viewModel::onEspaciosChange,
+                    label = { Text("Espacios disponibles") },
+                    isError = estado.errores.espacios != null,
+                    supportingText = {
+                        estado.errores.espacios?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = estado.observaciones,
+                    onValueChange = viewModel::onObservacionesChange,
+                    label = { Text("Observaciones") },
+                    isError = estado.errores.observaciones != null,
+                    supportingText = {
+                        estado.errores.observaciones?.let {
+                            Text(
+                                text = it,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // Botón: guardar y pasar al resumen
+                Button(
+                    onClick = {
                         if (viewModel.validarFormulario()) {
                             viewModel.guardar {
                                 mainViewModel.navigateTo(
                                     Screen.Resumen,
                                     popUpToRoute = Screen.Oportunidad,
-                                    inclusive = true,
+                                    inclusive = true
                                 )
                             }
                         }
                     },
-                )
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Guardar")
+                }
             }
         }
     }

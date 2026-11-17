@@ -3,231 +3,226 @@ package com.example.oportunidades.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.oportunidades.model.*
-import com.example.oportunidades.model.data.local.*
+import com.example.oportunidades.model.Fechas
+import com.example.oportunidades.model.ResultadoErrores
+import com.example.oportunidades.model.ResultadoUiState
+import com.example.oportunidades.model.data.local.AppDatabase
+import com.example.oportunidades.model.data.local.ResultadoEntity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class ResultadoViewModel(app: Application) : AndroidViewModel(app) {
-    private val db = AppDatabase.getDatabase(app)
-    private val dao = db.resultadoDao()
+
+    private val dao = AppDatabase.getDatabase(app).resultadoDao()
+
+    // Estado interno mutable
     private val _estado = MutableStateFlow(ResultadoUiState())
+
+    // Estado expuesto para la UI
     val estado: StateFlow<ResultadoUiState> = _estado
+
+    // Resultados guardados en Room
     private val _registros = MutableStateFlow<List<ResultadoEntity>>(emptyList())
     val registros: StateFlow<List<ResultadoEntity>> = _registros
-    private val _guardando = MutableStateFlow(false)
-    val guardando: StateFlow<Boolean> = _guardando
-    private val _mensaje = MutableStateFlow("")
-    val mensaje: StateFlow<String> = _mensaje
-    private val _cargando = MutableStateFlow(true)
-    val cargando: StateFlow<Boolean> = _cargando
 
     init {
         viewModelScope.launch {
-            try {
-                dao.obtenerTodos().collect {
-                    _registros.value = it
-                    _cargando.value = false
-                }
-            } catch (e: Exception) {
-                _cargando.value = false
-                _mensaje.value = "No se pudieron cargar los registros"
+            dao.obtenerTodos().collect { lista ->
+                _registros.value = lista
             }
         }
     }
 
+    // Limpia el formulario con valores iniciales para un resultado nuevo
     fun nuevo(oportunidadId: String = "") {
-        _estado.value =
-            ResultadoUiState(
-                fecha = Fechas.hoy(),
-                oportunidadId = oportunidadId,
-                estado = "Activación realizada",
-            )
-        _mensaje.value = ""
+        _estado.value = ResultadoUiState(
+            oportunidadId = oportunidadId,
+            fecha = Fechas.hoy(),
+            estado = "Activación realizada"
+        )
     }
 
+    // Carga un registro guardado para editarlo
     fun cargar(registro: ResultadoEntity) {
-        _estado.value =
-            ResultadoUiState(
-                id = registro.id,
-                oportunidadId = registro.oportunidadId,
-                fecha = registro.fecha,
-                estado = registro.estado,
-                asistentes = registro.asistentes,
-                contactos = registro.contactos,
-                interesados = registro.interesados,
-                inscripciones = registro.inscripciones,
-                observaciones = registro.observaciones,
-            )
-        _mensaje.value = ""
+        _estado.value = ResultadoUiState(
+            id = registro.id,
+            oportunidadId = registro.oportunidadId,
+            fecha = registro.fecha,
+            estado = registro.estado,
+            asistentes = registro.asistentes,
+            contactos = registro.contactos,
+            interesados = registro.interesados,
+            inscripciones = registro.inscripciones,
+            observaciones = registro.observaciones
+        )
     }
 
-    // Cada oportunidad tiene un resultado: se edita el registrado o se prepara uno nuevo.
+    // Cada oportunidad tiene un resultado: se edita el registrado o se prepara uno nuevo
     fun abrir(oportunidadId: Long) {
-        val previo = _registros.value.firstOrNull { it.oportunidadId == oportunidadId.toString() }
-        if (previo != null) cargar(previo) else nuevo(oportunidadId.toString())
-    }
-
-    // Resultados registrados para una oportunidad.
-    fun deOportunidad(lista: List<ResultadoEntity>, oportunidadId: Long): List<ResultadoEntity> =
-        lista.filter { it.oportunidadId == oportunidadId.toString() }
-
-    fun onOportunidadIdChange(valor: String) {
-        _estado.update {
-            it.copy(oportunidadId = valor, errores = it.errores.copy(oportunidadId = null))
+        val previo = _registros.value.find { it.oportunidadId == oportunidadId.toString() }
+        if (previo != null) {
+            cargar(previo)
+        } else {
+            nuevo(oportunidadId.toString())
         }
     }
 
+    // Resultados registrados para una oportunidad
+    fun deOportunidad(lista: List<ResultadoEntity>, oportunidadId: Long): List<ResultadoEntity> {
+        return lista.filter { it.oportunidadId == oportunidadId.toString() }
+    }
+
+    // Actualiza el campo fecha y limpia su error
     fun onFechaChange(valor: String) {
-        _estado.update { it.copy(fecha = valor, errores = it.errores.copy(fecha = null)) }
+        _estado.update {
+            it.copy(
+                fecha = valor,
+                errores = it.errores.copy(fecha = null)
+            )
+        }
     }
 
     fun onEstadoChange(valor: String) {
-        _estado.update { it.copy(estado = valor, errores = it.errores.copy(estado = null)) }
+        _estado.update {
+            it.copy(
+                estado = valor,
+                errores = it.errores.copy(estado = null)
+            )
+        }
     }
 
     fun onAsistentesChange(valor: String) {
-        _estado.update { it.copy(asistentes = valor, errores = it.errores.copy(asistentes = null)) }
+        _estado.update {
+            it.copy(
+                asistentes = valor,
+                errores = it.errores.copy(asistentes = null)
+            )
+        }
     }
 
     fun onContactosChange(valor: String) {
-        _estado.update { it.copy(contactos = valor, errores = it.errores.copy(contactos = null)) }
+        _estado.update {
+            it.copy(
+                contactos = valor,
+                errores = it.errores.copy(contactos = null)
+            )
+        }
     }
 
     fun onInteresadosChange(valor: String) {
         _estado.update {
-            it.copy(interesados = valor, errores = it.errores.copy(interesados = null))
+            it.copy(
+                interesados = valor,
+                errores = it.errores.copy(interesados = null)
+            )
         }
     }
 
     fun onInscripcionesChange(valor: String) {
         _estado.update {
-            it.copy(inscripciones = valor, errores = it.errores.copy(inscripciones = null))
+            it.copy(
+                inscripciones = valor,
+                errores = it.errores.copy(inscripciones = null)
+            )
         }
     }
 
     fun onObservacionesChange(valor: String) {
         _estado.update {
-            it.copy(observaciones = valor, errores = it.errores.copy(observaciones = null))
+            it.copy(
+                observaciones = valor,
+                errores = it.errores.copy(observaciones = null)
+            )
         }
+    }
+
+    // Indica si un número es inválido (vacío está permitido)
+    private fun numeroInvalido(valor: String): Boolean {
+        val numero = valor.toIntOrNull()
+        return valor.isNotBlank() && (numero == null || numero < 0)
     }
 
     // Validación global del formulario
     fun validarFormulario(): Boolean {
-        val errores = validarDatos(_estado.value)
-        val hayErrores =
-            listOfNotNull(
-                    errores.oportunidadId,
-                    errores.fecha,
-                    errores.estado,
-                    errores.asistentes,
-                    errores.contactos,
-                    errores.interesados,
-                    errores.inscripciones,
-                    errores.observaciones,
-                )
-                .isNotEmpty()
-        _estado.update { it.copy(errores = errores) }
+        val estadoActual = _estado.value
+
+        val errores = ResultadoErrores(
+            oportunidadId = if (estadoActual.oportunidadId.isBlank())
+                "Campo obligatorio"
+            else null,
+
+            fecha = if (!Fechas.valida(estadoActual.fecha))
+                "Usa AAAA-MM-DD y una fecha válida"
+            else null,
+
+            estado = if (estadoActual.estado.isBlank())
+                "Campo obligatorio"
+            else null,
+
+            asistentes = if (numeroInvalido(estadoActual.asistentes))
+                "Ingresa un número entero no negativo"
+            else null,
+
+            contactos = if (numeroInvalido(estadoActual.contactos))
+                "Ingresa un número entero no negativo"
+            else null,
+
+            interesados = if (numeroInvalido(estadoActual.interesados))
+                "Ingresa un número entero no negativo"
+            else null,
+
+            inscripciones = if (numeroInvalido(estadoActual.inscripciones))
+                "Ingresa un número entero no negativo"
+            else null,
+
+            observaciones = if (estadoActual.observaciones.isBlank())
+                "Campo obligatorio"
+            else null
+        )
+
+        val hayErrores = listOfNotNull(
+            errores.oportunidadId,
+            errores.fecha,
+            errores.estado,
+            errores.asistentes,
+            errores.contactos,
+            errores.interesados,
+            errores.inscripciones,
+            errores.observaciones
+        ).isNotEmpty()
+
+        _estado.update {
+            it.copy(errores = errores)
+        }
+
         return !hayErrores
     }
 
-    // Guarda en Room. La pantalla ejecuta validarFormulario() antes de llamar a guardar().
+    // Guarda en Room: inserta si es nuevo o modifica si ya existe
     fun guardar(onListo: () -> Unit) {
-        if (_guardando.value) return
         val a = _estado.value
-        _guardando.value = true
-        _mensaje.value = ""
+        val resultado = ResultadoEntity(
+            id = a.id,
+            oportunidadId = a.oportunidadId,
+            fecha = a.fecha,
+            estado = a.estado,
+            asistentes = a.asistentes,
+            contactos = a.contactos,
+            interesados = a.interesados,
+            inscripciones = a.inscripciones,
+            observaciones = a.observaciones
+        )
+
         viewModelScope.launch {
-            try {
-                if (db.oportunidadDao().obtener(a.oportunidadId.toLongOrNull() ?: 0) == null) {
-                    _mensaje.value = "La oportunidad ya no está disponible"
-                    return@launch
-                }
-
-                val registro =
-                    ResultadoEntity(
-                        id = a.id,
-                        oportunidadId = a.oportunidadId.trim(),
-                        fecha = a.fecha.trim(),
-                        estado = a.estado.trim(),
-                        asistentes = a.asistentes.trim(),
-                        contactos = a.contactos.trim(),
-                        interesados = a.interesados.trim(),
-                        inscripciones = a.inscripciones.trim(),
-                        observaciones = a.observaciones.trim(),
-                    )
-                val guardadoId =
-                    if (a.id == 0L) dao.insertar(registro)
-                    else {
-                        dao.modificar(
-                            id = a.id,
-                            oportunidadId = registro.oportunidadId,
-                            fecha = registro.fecha,
-                            estado = registro.estado,
-                            asistentes = registro.asistentes,
-                            contactos = registro.contactos,
-                            interesados = registro.interesados,
-                            inscripciones = registro.inscripciones,
-                            observaciones = registro.observaciones,
-                        )
-                        a.id
-                    }
-
-                _estado.update { it.copy(id = guardadoId) }
-                onListo()
-            } catch (e: Exception) {
-                _mensaje.value =
-                    "No se pudo completar el guardado. Revisa los datos e intenta nuevamente."
-            } finally {
-                _guardando.value = false
+            if (a.id == 0L) {
+                val id = dao.insertar(resultado)
+                _estado.update { it.copy(id = id) }
+            } else {
+                dao.modificar(resultado)
             }
-        }
-    }
-
-    companion object {
-        fun validarDatos(estadoActual: ResultadoUiState): ResultadoErrores {
-            val asistentes = estadoActual.asistentes.toIntOrNull()
-            val contactos = estadoActual.contactos.toIntOrNull()
-            val interesados = estadoActual.interesados.toIntOrNull()
-            val inscripciones = estadoActual.inscripciones.toIntOrNull()
-
-            return ResultadoErrores(
-                oportunidadId =
-                    if (estadoActual.oportunidadId.isBlank()) "Campo obligatorio" else null,
-                estado = if (estadoActual.estado.isBlank()) "Campo obligatorio" else null,
-                observaciones =
-                    if (estadoActual.observaciones.isBlank()) "Campo obligatorio" else null,
-                fecha =
-                    if (!Fechas.valida(estadoActual.fecha)) "Usa AAAA-MM-DD y una fecha válida"
-                    else null,
-                asistentes =
-                    if (
-                        estadoActual.asistentes.isNotBlank() &&
-                            (asistentes == null || asistentes < 0)
-                    )
-                        "Ingresa un entero no negativo"
-                    else null,
-                contactos =
-                    if (estadoActual.contactos.isNotBlank() && (contactos == null || contactos < 0))
-                        "Ingresa un entero no negativo"
-                    else null,
-                interesados =
-                    if (
-                        estadoActual.interesados.isNotBlank() &&
-                            (interesados == null || interesados < 0)
-                    )
-                        "Ingresa un entero no negativo"
-                    else null,
-                inscripciones =
-                    if (
-                        estadoActual.inscripciones.isNotBlank() &&
-                            (inscripciones == null || inscripciones < 0)
-                    )
-                        "Ingresa un entero no negativo"
-                    else null,
-            )
+            onListo()
         }
     }
 }

@@ -5,9 +5,16 @@ import android.content.pm.PackageManager
 import android.widget.ImageView
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -15,14 +22,22 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.example.oportunidades.viewmodel.EvidenciaViewModel
 
+// Fotografías de evidencia de una oportunidad
 @Composable
-fun EvidenciasOportunidad(oportunidadId: Long, viewModel: EvidenciaViewModel) {
+fun EvidenciasOportunidad(
+    oportunidadId: Long,
+    viewModel: EvidenciaViewModel
+) {
     val context = LocalContext.current
     val estado by viewModel.estado.collectAsState()
-    LaunchedEffect(oportunidadId) { viewModel.cargar(oportunidadId) }
 
-    val camara = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) {
-        viewModel.finalizarCaptura(it)
+    LaunchedEffect(oportunidadId) {
+        viewModel.cargar(oportunidadId)
+    }
+
+    // Cámara: guarda la foto en el archivo preparado por el ViewModel
+    val camara = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { aceptada ->
+        viewModel.finalizarCaptura(aceptada)
     }
 
     fun capturar() {
@@ -35,13 +50,21 @@ fun EvidenciasOportunidad(oportunidadId: Long, viewModel: EvidenciaViewModel) {
         }
     }
 
-    val permiso = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
-        if (it) capturar()
-        else viewModel.mensaje("Sin permiso de cámara. Puedes continuar y tomar la foto después.")
+    // Permiso de cámara
+    val permiso = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { permitido ->
+        if (permitido) {
+            capturar()
+        } else {
+            viewModel.mensaje("Sin permiso de cámara. Puedes continuar y tomar la foto después.")
+        }
     }
 
-    Text("Evidencias de la oportunidad", style = MaterialTheme.typography.titleLarge)
+    Text(
+        "Evidencias de la oportunidad",
+        style = MaterialTheme.typography.titleLarge
+    )
     Text("Fotografía un objeto o emblema de prueba. Las imágenes se conservan en este teléfono.")
+
     OutlinedButton(
         enabled = estado.oportunidadId == oportunidadId && !estado.capturando,
         onClick = {
@@ -52,13 +75,19 @@ fun EvidenciasOportunidad(oportunidadId: Long, viewModel: EvidenciaViewModel) {
             } else {
                 permiso.launch(Manifest.permission.CAMERA)
             }
-        },
+        }
     ) {
         Text("Fotografiar evidencia")
     }
+
     if (estado.oportunidadId == oportunidadId) {
-        if (estado.mensaje.isNotBlank()) Text(estado.mensaje)
-        if (estado.imagenes.isEmpty()) Text("Esta oportunidad todavía no tiene fotografías.")
+        if (estado.mensaje.isNotBlank()) {
+            Text(estado.mensaje)
+        }
+        if (estado.imagenes.isEmpty()) {
+            Text("Esta oportunidad todavía no tiene fotografías.")
+        }
+
         estado.imagenes.forEachIndexed { indice, uri ->
             key(uri) {
                 AndroidView(
@@ -68,14 +97,16 @@ fun EvidenciasOportunidad(oportunidadId: Long, viewModel: EvidenciaViewModel) {
                         imagen.contentDescription = "Evidencia ${indice + 1} de la oportunidad"
                         imagen
                     },
-                    modifier = Modifier.fillMaxWidth().height(200.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp),
                     update = { imagen ->
                         try {
                             imagen.setImageURI(uri)
                         } catch (e: Exception) {
                             viewModel.mensaje("No se pudo mostrar una de las fotografías")
                         }
-                    },
+                    }
                 )
             }
         }

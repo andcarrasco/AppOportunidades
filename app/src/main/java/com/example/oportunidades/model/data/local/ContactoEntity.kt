@@ -14,5 +14,5 @@ data class ContactoEntity(
     val telefono: String = "",
     val medio: String = "",
     val estado: String = "",
-    val observaciones: String = "",
+    val observaciones: String = ""
 )

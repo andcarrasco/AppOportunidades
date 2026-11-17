@@ -1,21 +1,29 @@
 package com.example.oportunidades.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 
-private val claro =
-    lightColorScheme(
-        primary = Color(0xFF176B5B),
-        secondary = Color(0xFF425E73),
-        tertiary = Color(0xFF8C612D),
-    )
+private val LightColorScheme = lightColorScheme(
+    primary = Verde,
+    secondary = Azul,
+    tertiary = Cafe
+)
+
+private val DarkColorScheme = darkColorScheme()
 
 @Composable
-fun OportunidadesTheme(content: @Composable () -> Unit) {
+fun OportunidadesTheme(
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    content: @Composable () -> Unit
+) {
+    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+
     MaterialTheme(
-        colorScheme = if (isSystemInDarkTheme()) darkColorScheme() else claro,
-        content = content,
+        colorScheme = colorScheme,
+        typography = Typography,
+        content = content
     )
 }

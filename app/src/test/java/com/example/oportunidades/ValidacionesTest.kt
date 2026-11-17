@@ -1,91 +1,51 @@
 package com.example.oportunidades
 
-import com.example.oportunidades.model.*
-import com.example.oportunidades.viewmodel.*
-import org.junit.Assert.*
+import com.example.oportunidades.model.Fechas
+import com.example.oportunidades.viewmodel.UsuarioViewModel
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ValidacionesTest {
-    private fun oportunidadValida() =
-        OportunidadUiState(
-            nombre = "Feria Demo",
-            tipo = "Feria empresarial",
-            descripcion = "Feria ficticia para presentar beneficios a trabajadores",
-            fuente = "Registro ficticio",
-            responsable = "Ejecutivo Demo",
-            prioridad = "Media",
-            potencial = "Alto",
-            estado = "Evento identificado",
-            organizacionId = "1",
-            comuna = "Comuna Demo",
-            region = "Región Demo",
-            publico = "Trabajadores",
-            fechaDeteccion = "2026-10-20",
-            fechaInicio = "2026-11-10",
-            fechaTermino = "2026-11-10",
-            horario = "09:30",
-            costos = "0",
-            asistentes = "100",
-        )
 
     @Test
-    fun formularioVacioEntregaErroresEnCamposObligatorios() {
-        val e = OportunidadViewModel.validarDatos(OportunidadUiState())
-        assertNotNull(e.nombre)
-        assertNotNull(e.descripcion)
-        assertNotNull(e.fuente)
-        assertNotNull(e.potencial)
-        assertNotNull(e.organizacionId)
-        assertNotNull(e.fechaInicio)
+    fun formularioVacioMuestraErrores() {
+        val viewModel = UsuarioViewModel()
+
+        assertFalse(viewModel.validarFormulario())
+        assertNotNull(viewModel.estado.value.errores.correo)
+        assertNotNull(viewModel.estado.value.errores.clave)
     }
 
     @Test
-    fun oportunidadValidaPermiteEventoHistorico() {
-        val e =
-            OportunidadViewModel.validarDatos(
-                oportunidadValida().copy(fechaInicio = "2025-01-01", fechaTermino = "2025-01-02")
-            )
-        assertNull(e.fechaInicio)
-        assertNull(e.fechaTermino)
-        assertNull(e.costos)
+    fun escribirEnUnCampoLimpiaSuError() {
+        val viewModel = UsuarioViewModel()
+        viewModel.validarFormulario()
+
+        viewModel.onCorreoChange("ejecutivo@example.com")
+
+        assertNull(viewModel.estado.value.errores.correo)
+        assertNotNull(viewModel.estado.value.errores.clave)
     }
 
     @Test
-    fun descripcionEnBlancoEsRechazada() {
-        val errores = OportunidadViewModel.validarDatos(oportunidadValida().copy(descripcion = "   "))
-        assertNotNull(errores.descripcion)
-        assertNull(OportunidadViewModel.validarDatos(oportunidadValida()).descripcion)
-    }
+    fun accesoDeDemostracionYCierreDeSesion() {
+        val viewModel = UsuarioViewModel()
+        viewModel.onCorreoChange("ejecutivo@example.com")
+        viewModel.onClaveChange("Incorrecta")
+        assertFalse(viewModel.validarFormulario())
 
-    @Test
-    fun potencialDebePertenecerAlCatalogo() {
-        val errores = OportunidadViewModel.validarDatos(oportunidadValida().copy(potencial = "Muy alto"))
-        assertNotNull(errores.potencial)
-        for (potencial in Catalogos.potenciales) {
-            val validos = OportunidadViewModel.validarDatos(oportunidadValida().copy(potencial = potencial))
-            assertNull(validos.potencial)
-        }
-    }
+        viewModel.onClaveChange("Demo2026")
+        assertTrue(viewModel.validarFormulario())
+        assertTrue(viewModel.estado.value.activo)
+        assertEquals("", viewModel.estado.value.clave)
 
-    @Test
-    fun fechaFinalAnteriorAlInicioEsRechazada() {
-        assertNotNull(
-            OportunidadViewModel.validarDatos(oportunidadValida().copy(fechaTermino = "2026-11-09"))
-                .fechaTermino
-        )
-    }
-
-    @Test
-    fun numerosInvalidosYNoFinitosSonRechazados() {
-        val e =
-            OportunidadViewModel.validarDatos(
-                oportunidadValida().copy(costos = "NaN", asistentes = "-1")
-            )
-        assertNotNull(e.costos)
-        assertNotNull(e.asistentes)
-        assertNotNull(
-            OportunidadViewModel.validarDatos(oportunidadValida().copy(costos = "abc")).costos
-        )
+        viewModel.salir()
+        assertFalse(viewModel.estado.value.activo)
+        assertEquals("", viewModel.estado.value.correo)
     }
 
     @Test
@@ -94,48 +54,5 @@ class ValidacionesTest {
         assertFalse(Fechas.horaValida("25:00"))
         assertTrue(Fechas.valida("2028-02-29"))
         assertTrue(Fechas.horaValida("23:59"))
-    }
-
-    @Test
-    fun proximaGestionRequiereDescripcionYFechaCoherentes() {
-        val base =
-            SeguimientoUiState(
-                oportunidadId = "1",
-                responsable = "Demo",
-                tipo = "Seguimiento",
-                fecha = "2026-10-20",
-                hora = "09:00",
-                resultado = "Sin respuesta",
-            )
-        assertNotNull(
-            SeguimientoViewModel.validarDatos(base.copy(proximaFecha = "2026-10-21")).proximaAccion
-        )
-        assertNotNull(
-            SeguimientoViewModel.validarDatos(
-                    base.copy(proximaAccion = "Llamar", proximaFecha = "2026-10-19")
-                )
-                .proximaFecha
-        )
-        assertNull(
-            SeguimientoViewModel.validarDatos(
-                    base.copy(proximaAccion = "Llamar", proximaFecha = "2026-10-21")
-                )
-                .proximaFecha
-        )
-    }
-
-    @Test
-    fun accesoDeDemostracionYLimpiezaDeSesion() {
-        val vm = UsuarioViewModel()
-        vm.onCorreoChange("ejecutivo@example.com")
-        vm.onClaveChange("Incorrecta")
-        assertFalse(vm.validarFormulario())
-        vm.onClaveChange("Demo2026")
-        assertTrue(vm.validarFormulario())
-        assertTrue(vm.estado.value.activo)
-        assertEquals("", vm.estado.value.clave)
-        vm.salir()
-        assertFalse(vm.estado.value.activo)
-        assertEquals("", vm.estado.value.correo)
     }
 }

@@ -14,5 +14,5 @@ data class SeguimientoEntity(
     val resultado: String = "",
     val proximaAccion: String = "",
     val proximaFecha: String = "",
-    val observaciones: String = "",
+    val observaciones: String = ""
 )

@@ -1,4 +1,6 @@
 package com.example.oportunidades.model
+
+// Modelo que almacena posibles errores individuales del formulario
 data class OrganizacionErrores(
     val nombre: String? = null,
     val tipo: String? = null,
@@ -7,5 +9,5 @@ data class OrganizacionErrores(
     val region: String? = null,
     val sitioWeb: String? = null,
     val publico: String? = null,
-    val observaciones: String? = null,
+    val observaciones: String? = null
 )

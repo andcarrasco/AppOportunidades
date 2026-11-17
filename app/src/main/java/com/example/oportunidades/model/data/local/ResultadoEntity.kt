@@ -13,5 +13,5 @@ data class ResultadoEntity(
     val contactos: String = "",
     val interesados: String = "",
     val inscripciones: String = "",
-    val observaciones: String = "",
+    val observaciones: String = ""
 )
