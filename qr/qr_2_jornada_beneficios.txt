@@ -1,0 +1,19 @@
+Nombre: Jornada de Beneficios Demo Florida
+Tipo: Jornada de beneficios
+Descripción: Jornada de bienestar para colaboradores de una empresa ficticia
+Fuente: Código QR
+Prioridad: Media
+Potencial: Medio
+Organización: Empresa Logística Demo
+Fecha inicio: 2027-01-12
+Fecha término: 2027-01-12
+Hora: 09:30
+Comuna: La Florida
+Región: Metropolitana
+Ubicación: Casino de la empresa
+Público: Colaboradores y sus familias
+Asistentes: 300
+Costos: 0
+Espacios: 2 mesas
+Condiciones: Instalación desde las 08:30
+Observaciones: Datos ficticios para la demostración

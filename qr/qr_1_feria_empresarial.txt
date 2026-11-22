@@ -1,0 +1,19 @@
+Nombre: Feria Empresarial Demo Maipú
+Tipo: Feria empresarial
+Descripción: Feria anual de proveedores con espacio para stands de beneficios
+Fuente: Código QR
+Prioridad: Alta
+Potencial: Alto
+Organización: Cámara de Comercio Demo
+Fecha inicio: 2026-12-15
+Fecha término: 2026-12-16
+Hora: 10:00
+Comuna: Maipú
+Región: Metropolitana
+Ubicación: Centro de eventos ficticio
+Público: Trabajadores y familias
+Asistentes: 1500
+Costos: 120000
+Espacios: 10 stands
+Condiciones: Stand de 3x3 con mesa y dos sillas
+Observaciones: Datos ficticios para la demostración

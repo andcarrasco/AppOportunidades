@@ -1,85 +1,162 @@
 # AppOportunidades
 
-Aplicación Android para registrar oportunidades de eventos y activaciones corporativas y llevar un seguimiento de lo que se ha hecho en cada una. Corresponde al trabajo de la Evaluación Parcial 2 de Desarrollo de Aplicaciones Móviles, DSY1105.
+Aplicación Android para registrar y gestionar oportunidades de eventos y activaciones corporativas (Caso 003V: Gestión móvil de oportunidades y activaciones corporativas). Corresponde a la Evaluación Parcial 4 de Desarrollo de Aplicaciones Móviles, DSY1105, y continúa el trabajo de la Evaluación Parcial 2.
 
-Integrantes: Andrés Carrasco y Pablo Rojas.
+## 1. Nombre del proyecto
 
-Toda la información usada para la demostración es ficticia. Los datos se guardan en el teléfono y no se comparten entre dispositivos.
+AppOportunidades: app móvil (Kotlin, Jetpack Compose, Material 3, MVVM) con dos microservicios propios en Spring Boot y consumo de una API externa.
 
-## Qué se puede hacer
+## 2. Integrantes
 
-- Registrar y editar organizaciones y sus contactos.
-- Crear oportunidades con los datos del evento, responsable, prioridad y estado.
-- Buscar oportunidades por nombre y filtrarlas por fecha, tipo, estado, organización, ubicación, prioridad o responsable.
-- Registrar gestiones, propuestas y próximas acciones, y consultar el historial de cada oportunidad.
-- Ver avisos de eventos próximos, contactos pendientes, propuestas sin respuesta y seguimientos atrasados.
-- Registrar el resultado de una activación con cantidades ficticias de asistentes, contactos e inscripciones.
-- Tomar fotografías desde el detalle de una oportunidad y conservarlas como evidencias en el teléfono.
-- Usar la cámara o elegir una imagen de la galería para el perfil.
-- Escanear un código QR con los datos de un evento para crear una oportunidad.
-- Activar o desactivar los avisos desde el perfil y conservar esa preferencia.
+- Andrés Carrasco
 
-## Cómo ejecutar la app
+Toda la información usada para la demostración es ficticia: usuarios, organizaciones, contactos, costos y resultados.
 
-1. Abrir la carpeta del proyecto en Android Studio Quail 4.
-2. Sincronizar Gradle usando el JDK incluido en Android Studio. Instalar el SDK 37 si se solicita.
-3. Conectar un teléfono o iniciar un emulador con Android 13 (API 33) o superior.
-4. Seleccionar el módulo `app` y presionar Run.
-5. Ingresar con estos datos de prueba:
+## 3. Funcionalidades
 
-   - Correo: `ejecutivo@example.com`
-   - Contraseña: `Demo2026`
+### Ingreso con tres perfiles
 
-El acceso es local, con una cuenta fija. Al cerrar el proceso de la aplicación hay que ingresar nuevamente.
+La app tiene un login validado por el microservicio de usuarios. Cada perfil ve su propio menú y sus propias acciones, según el diagrama de flujo del caso:
 
-## Primer recorrido
+| Perfil | Correo | Clave | Qué puede hacer |
+|---|---|---|---|
+| Ejecutivo comercial | `ejecutivo@example.com` | `Demo2026` | Registrar oportunidades (evento, organización, contacto, detalles y fecha), escanear un QR que deja la oportunidad registrada, registrar gestiones y propuestas enviadas. |
+| Supervisor comercial | `supervisor@example.com` | `Demo2026` | Ver la lista de oportunidades con búsqueda y filtros, revisar el detalle y el seguimiento, gestionar el estado (Pendiente, En gestión, Confirmada, Descartada), asignar responsable, cambiar la prioridad y eliminar oportunidades. |
+| Gestión de activaciones | `activaciones@example.com` | `Demo2026` | Coordinar la activación (confirmar participación, registrar condiciones, asignar responsable, agregar evidencias con foto) y registrar resultados (resultado, observaciones y próximas acciones). |
 
-Desde Oportunidades, entrar a Organizaciones y contactos y registrar una organización. Después se puede agregar un contacto y crear una oportunidad asociada a esa organización.
+En el login hay un botón por cada cuenta de prueba que completa el correo. Para **cerrar sesión o cambiar de perfil** se usa el ícono de salida en la barra superior de Inicio o el botón "Cerrar sesión / Cambiar perfil" en Perfil. Ambos vuelven al login.
 
-La ficha reúne la oportunidad y los datos del evento. Nombre, tipo, descripción, fuente, prioridad, potencial y estado son obligatorios; el potencial debe ser Bajo, Medio o Alto. Desde el detalle se puede editar, agregar una gestión, revisar el historial o registrar el resultado de la activación. Los cambios de estado también quedan en el historial. En el detalle, Fotografiar evidencia permite tomar una foto de prueba y verla asociada a esa oportunidad.
+Si el microservicio de usuarios no está disponible, la app permite entrar con las mismas cuentas de prueba e informa que el ingreso es sin conexión.
 
-Para crear una oportunidad desde un código QR, en Oportunidades presionar Escanear QR de oportunidad y enfocar el código. El código debe tener una línea por dato, por ejemplo:
+### Otras funciones
 
-```
-Nombre: Feria de beneficios Demo
-Tipo: Feria empresarial
-Organización: Empresa Demo
-Fecha inicio: 2026-12-01
-Hora: 09:30
-Comuna: Santiago
-Región: Metropolitana
-Público: Trabajadores
-```
+- Avisos de eventos próximos, contactos pendientes, propuestas sin respuesta y seguimientos atrasados (pestaña Pendientes).
+- Historial de cada oportunidad, incluidos los cambios de estado.
+- Organizaciones y contactos ficticios.
+- Lectura de códigos QR con CameraX y ML Kit.
+- Feriados de Chile obtenidos desde una API externa, con aviso si un evento registrado cae en un feriado.
+- Preferencia de avisos guardada con DataStore y foto de perfil con cámara o galería.
 
-Los datos se cargan en el formulario; ahí se revisan, se completan los que falten y se presiona Guardar. La organización debe estar registrada con el mismo nombre; si no, se selecciona en el formulario. Un código sin datos reconocidos se usa como descripción.
+### Datos: microservicio y Room
 
-Para registrar una propuesta, agregar una gestión de tipo Envío de propuesta y cambiar el estado de la oportunidad a Propuesta enviada. La app solo deja constancia de esa gestión; no envía correos ni mensajes.
+- Las **oportunidades** se crean, consultan, modifican, cambian de estado y eliminan en el microservicio `ms-oportunidades` (CRUD completo). Cada respuesta se guarda también en Room, así que si se pierde la conexión la app sigue mostrando la última información descargada.
+- **Organizaciones, contactos, gestiones, activaciones y resultados** se guardan en Room, igual que en el diagrama del caso.
+- La **API externa** (feriados) se muestra en su propia pantalla y no se mezcla con los datos propios.
 
-Las fechas se escriben como `AAAA-MM-DD`, las horas como `HH:mm` y los costos con punto decimal. Para probar cámara y galería, usar una imagen de un objeto o un emblema sin personas identificables.
+### Códigos QR de prueba
+
+En la carpeta `qr/` hay 3 códigos, cada uno con una oportunidad ficticia. Junto a cada imagen hay un `.txt` con el mismo contenido:
+
+- `qr_1_feria_empresarial.png`
+- `qr_2_jornada_beneficios.png`
+- `qr_3_actividad_municipal.png`
+
+Para usarlos, ingresa como ejecutivo comercial, presiona "Escanear QR de oportunidad", enfoca el código y presiona **Registrar oportunidad**:
+
+1. Si la organización del código no existe, se crea.
+2. La oportunidad se guarda en el microservicio.
+3. La app muestra el resumen.
+
+Con "Revisar en el formulario" se pueden ver y editar los datos antes de guardar.
+
+## 4. Endpoints utilizados
+
+### Microservicios propios (carpeta `microservicios/`)
+
+Desde el emulador, la app usa `http://10.0.2.2` para llegar al computador.
+
+**ms-usuarios** (puerto 8081, base de datos H2):
+
+| Método | Endpoint | Uso en la app |
+|---|---|---|
+| POST | `/api/usuarios/login` | Inicio de sesión y obtención del perfil |
+| GET | `/api/usuarios` | Listado de usuarios |
+| GET | `/api/usuarios/{id}` | Consulta de un usuario |
+| POST | `/api/usuarios` | Creación de usuario |
+| PUT | `/api/usuarios/{id}` | Modificación de usuario |
+| DELETE | `/api/usuarios/{id}` | Eliminación de usuario |
+
+**ms-oportunidades** (puerto 8082, base de datos H2):
+
+| Método | Endpoint | Uso en la app |
+|---|---|---|
+| GET | `/api/oportunidades` | Lista de oportunidades (botón "Actualizar desde el servidor") |
+| GET | `/api/oportunidades/{id}` | Consulta de una oportunidad |
+| POST | `/api/oportunidades` | Registrar oportunidad (formulario o QR) |
+| PUT | `/api/oportunidades/{id}` | Editar oportunidad y decisión del supervisor |
+| PATCH | `/api/oportunidades/{id}/estado` | Confirmar participación desde Coordinar activación |
+| DELETE | `/api/oportunidades/{id}` | Eliminar oportunidad (supervisor) |
+
+Las consolas H2 quedan en `http://localhost:8081/h2-console` y `http://localhost:8082/h2-console`. El detalle de cada endpoint, con ejemplos JSON, está en `microservicios/README.md`.
+
+### API externa
+
+| Método | Endpoint | Uso en la app |
+|---|---|---|
+| GET | `https://date.nager.at/api/v3/PublicHolidays/{año}/CL` | Pantalla "Feriados de Chile" (año actual y siguiente) |
+
+## 5. Pasos para ejecutar
+
+### Microservicios
+
+1. Tener Java 21 o superior.
+2. En una terminal, ejecutar el servicio de usuarios:
+   ```
+   cd microservicios/ms-usuarios
+   mvnw spring-boot:run
+   ```
+3. En otra terminal, ejecutar el servicio de oportunidades:
+   ```
+   cd microservicios/ms-oportunidades
+   mvnw spring-boot:run
+   ```
+   En PowerShell se escribe `.\mvnw spring-boot:run`. La primera vez se descarga Maven automáticamente.
+4. Comprobar que responden: http://localhost:8081/api/usuarios y http://localhost:8082/api/oportunidades.
+
+### App móvil
+
+1. Abrir la carpeta del proyecto en Android Studio.
+2. En Settings > Build Tools > Gradle, usar el JDK 21 (Gradle JDK).
+3. Sincronizar Gradle e instalar el SDK 37 si se solicita.
+4. Iniciar un emulador con Android 13 (API 33) o superior (probado con Pixel 7, API 34).
+5. Seleccionar el módulo `app` y presionar Run.
+6. Ingresar con una de las cuentas de prueba.
+
+Para usar un teléfono físico, en `remote/RetrofitInstance.kt` cambia `HOST` por la IP del computador en la misma red Wi-Fi, por ejemplo `http://192.168.1.10`. También hay que permitir los puertos 8081 y 8082 en el firewall de Windows.
+
+### Pruebas unitarias
+
+- Las pruebas de lógica están en `app/src/test/java` y usan Kotest, JUnit 5, MockK y kotlinx-coroutines-test. Cubren todos los ViewModel de la lógica y los Repository.
+- La prueba de interfaz está en `app/src/androidTest/java` y usa Compose UI Test con MockK.
+- Para ejecutarlas, en Android Studio haz clic derecho en la carpeta de pruebas y elige "Run 'Tests in ...'". Para ver la cobertura, usa "Run with Coverage".
+- Los microservicios tienen sus pruebas de servicio con JUnit 5 y Mockito. Se ejecutan con `mvnw test`.
+
+## 6. APK firmado y llave
+
+- Llave: `keystore/oportunidades.jks`. El alias es `oportunidades` y la clave del almacén y de la llave es `Oportunidades2026` (proyecto académico).
+- La configuración de firma está en `app/build.gradle.kts`, en `signingConfigs` → `release`.
+- Para generar el APK: Build > Generate Signed App Bundle or APK > APK, con la misma llave. También se puede ejecutar `gradlew assembleRelease`.
+- El APK firmado queda en `app/build/outputs/apk/release/app-release.apk`. Hay una copia en `apk/app-release.apk`.
+
+Capturas:
+
+![APK firmado](docs/capturas/apk_firmado.png)
+![Llave .jks](docs/capturas/llave_jks.png)
 
 ## Organización del código
 
-El código sigue la estructura MVVM de las guías del curso. En los formularios, la pantalla muestra los datos y ejecuta `validarFormulario()` antes de llamar a `guardar()`; el ViewModel maneja el estado, valida y guarda en Room a través de los DAO. La ficha de una oportunidad y su entrada de historial se guardan juntas en una transacción. Las pantallas navegan emitiendo eventos a `MainViewModel`, que `AppNavigation` escucha. Los ViewModel de perfil y evidencias preparan los archivos de imagen con FileProvider.
+Sigue la estructura MVVM de las guías del curso:
 
-- `model`: estados de los formularios, errores, catálogos y fechas.
-- `model/data/local`: entidades, DAO y base Room.
-- `viewmodel`: validaciones, guardado, filtros, avisos, imágenes y eventos de navegación.
-- `navigation`: rutas y conexión entre pantallas.
-- `ui`: pantallas, componentes compartidos, tema, tamaños de ventana y lector QR con CameraX y ML Kit.
-- `data`: preferencia de avisos con DataStore.
+| Carpeta | Contenido |
+|---|---|
+| `model` | Estados de formularios (UiState), errores, catálogos, fechas y modelos de la API (Usuario, Feriado) |
+| `model/data/local` | Entidades, DAO y base Room |
+| `remote` | `RetrofitInstance` y las interfaces de los servicios (usuarios, oportunidades, feriados) |
+| `repository` | Un repositorio por fuente de datos. Los ViewModel los reciben por constructor, lo que permite simularlos en las pruebas. |
+| `viewmodel` | Estado, validaciones (`validarFormulario`), guardado y eventos de navegación |
+| `navigation` | Rutas y conexión entre pantallas según el perfil |
+| `ui` | Pantallas, componentes, tema y lector QR |
 
-## Qué falta revisar
+## Planificación
 
-Hay pruebas de validación y de selección de la última gestión en `app/src/test`. La versión actual se revisó de forma estática, pero todavía falta compilarla, ejecutar las pruebas y comprobar el recorrido completo en un teléfono, incluidos permisos, captura y cancelación de imágenes.
-
-También hay que comprobar que los registros sigan disponibles después de cerrar y abrir la app, y que se conserve la preferencia de avisos. La foto del perfil usa almacenamiento temporal. Las fotografías tomadas desde el detalle de una oportunidad se guardan en archivos internos asociados a su identificador; se conservan al reiniciar la app y se eliminan al borrar sus datos o desinstalarla.
-
-El historial se consulta por oportunidad. El contacto de una gestión se puede indicar en sus observaciones; no hay un historial separado por contacto. El público esperado y el objetivo se describen en un mismo campo.
-
-Para la entrega quedan por completar los accesos del docente. GitHub y AVA deben contener la misma version del proyecto.
-
-## Planificacion
-
-Tablero de Trello (publico): https://trello.com/b/ddjxbRZd/dsy1105-parcial-2-appoportunidades
-
-Equipo N°: 2
+Tablero de Trello (público): https://trello.com/b/ddjxbRZd/dsy1105-parcial-2-appoportunidades

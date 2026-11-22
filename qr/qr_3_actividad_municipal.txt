@@ -1,0 +1,19 @@
+Nombre: Actividad Municipal Demo Puente Alto
+Tipo: Actividad municipal
+Descripción: Feria de servicios para vecinos organizada por una municipalidad ficticia
+Fuente: Código QR
+Prioridad: Alta
+Potencial: Medio
+Organización: Municipalidad Demo
+Fecha inicio: 2027-02-06
+Fecha término: 2027-02-07
+Hora: 11:00
+Comuna: Puente Alto
+Región: Metropolitana
+Ubicación: Plaza principal
+Público: Vecinos de la comuna
+Asistentes: 2000
+Costos: 50000
+Espacios: 1 carpa
+Condiciones: Requiere carta de presentación de la agencia
+Observaciones: Datos ficticios para la demostración
