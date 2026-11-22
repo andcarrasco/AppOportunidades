@@ -4,6 +4,9 @@
     <!-- Permiso de internet para los microservicios y la API de feriados -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Android 17: permiso para conectarse a los microservicios en la red local -->
+    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
+
     <!-- Permiso de cámara para fotos y lectura de códigos QR -->
     <uses-permission android:name="android.permission.CAMERA" />
 

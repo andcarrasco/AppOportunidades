@@ -1,5 +1,10 @@
 package com.example.oportunidades.ui.screen
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,12 +20,15 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import com.example.oportunidades.model.Catalogos
 import com.example.oportunidades.navigation.Screen
 import com.example.oportunidades.ui.components.BarraTitulo
@@ -35,6 +43,19 @@ fun LoginScreen(
 ) {
     val estado by viewModel.estado.collectAsState()
     val anchoContenido = obtenerAnchoContenido()
+    val context = LocalContext.current
+
+    val permisoRed = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+
+    // Desde Android 17 se necesita permiso para llegar a los microservicios en la red local
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= 37 &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_LOCAL_NETWORK) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            permisoRed.launch(Manifest.permission.ACCESS_LOCAL_NETWORK)
+        }
+    }
 
     Scaffold(
         topBar = { BarraTitulo("Oportunidades corporativas") }

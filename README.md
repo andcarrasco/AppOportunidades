@@ -120,7 +120,8 @@ Las consolas H2 quedan en `http://localhost:8081/h2-console` y `http://localhost
 3. Sincronizar Gradle e instalar el SDK 37 si se solicita.
 4. Iniciar un emulador con Android 13 (API 33) o superior (probado con Pixel 7, API 34).
 5. Seleccionar el módulo `app` y presionar Run.
-6. Ingresar con una de las cuentas de prueba.
+6. Al abrir la app en Android 17 o superior, aceptar el permiso de dispositivos cercanos / red local. Sin ese permiso la app no puede llegar a los microservicios y entra en modo sin conexión.
+7. Ingresar con una de las cuentas de prueba.
 
 Para usar un teléfono físico, en `remote/RetrofitInstance.kt` cambia `HOST` por la IP del computador en la misma red Wi-Fi, por ejemplo `http://192.168.1.10`. También hay que permitir los puertos 8081 y 8082 en el firewall de Windows.
 
