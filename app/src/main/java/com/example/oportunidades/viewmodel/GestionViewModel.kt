@@ -134,26 +134,24 @@ class GestionViewModel(
         return avisos
     }
 
-    companion object {
-        // Última gestión registrada de una oportunidad (sin contar los cambios de estado)
-        fun ultimaGestion(oportunidadId: String, gestiones: List<SeguimientoEntity>): SeguimientoEntity? {
-            var ultima: SeguimientoEntity? = null
+    // Última gestión registrada de una oportunidad (sin contar los cambios de estado)
+    fun ultimaGestion(oportunidadId: String, gestiones: List<SeguimientoEntity>): SeguimientoEntity? {
+        var ultima: SeguimientoEntity? = null
 
-            gestiones.forEach { gestion ->
-                if (gestion.oportunidadId == oportunidadId && gestion.tipo != "Cambio de estado") {
-                    val anterior = ultima
-                    if (anterior == null || gestion.fecha > anterior.fecha) {
+        gestiones.forEach { gestion ->
+            if (gestion.oportunidadId == oportunidadId && gestion.tipo != "Cambio de estado") {
+                val anterior = ultima
+                if (anterior == null || gestion.fecha > anterior.fecha) {
+                    ultima = gestion
+                } else if (gestion.fecha == anterior.fecha) {
+                    if (gestion.hora > anterior.hora) {
                         ultima = gestion
-                    } else if (gestion.fecha == anterior.fecha) {
-                        if (gestion.hora > anterior.hora) {
-                            ultima = gestion
-                        } else if (gestion.hora == anterior.hora && gestion.id > anterior.id) {
-                            ultima = gestion
-                        }
+                    } else if (gestion.hora == anterior.hora && gestion.id > anterior.id) {
+                        ultima = gestion
                     }
                 }
             }
-            return ultima
         }
+        return ultima
     }
 }

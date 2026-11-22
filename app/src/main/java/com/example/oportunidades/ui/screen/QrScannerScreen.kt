@@ -205,7 +205,11 @@ fun QrScannerScreen(
                             organizacionViewModel.buscarOCrear(
                                 campos["organizacion"] ?: "Organización sin nombre",
                                 campos["comuna"] ?: "",
-                                campos["region"] ?: ""
+                                campos["region"] ?: "",
+                                onError = {
+                                    registrando = false
+                                    viewModel.mensaje("No se pudo registrar la organización del código")
+                                }
                             ) { organizacionId ->
                                 oportunidadViewModel.cargarDesdeQr(campos, organizacionId)
                                 if (oportunidadViewModel.validarFormulario()) {
@@ -241,7 +245,10 @@ fun QrScannerScreen(
                             organizacionViewModel.buscarOCrear(
                                 campos["organizacion"] ?: "Organización sin nombre",
                                 campos["comuna"] ?: "",
-                                campos["region"] ?: ""
+                                campos["region"] ?: "",
+                                onError = {
+                                    viewModel.mensaje("No se pudo registrar la organización del código")
+                                }
                             ) { organizacionId ->
                                 oportunidadViewModel.cargarDesdeQr(campos, organizacionId)
                                 viewModel.clearResult()

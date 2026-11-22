@@ -147,7 +147,7 @@ class OrganizacionViewModelTest : StringSpec({
             advanceUntilIdle()
             var id = ""
 
-            viewModel.buscarOCrear(" cámara de comercio demo ", "Maipú", "Metropolitana") { id = it }
+            viewModel.buscarOCrear(" cámara de comercio demo ", "Maipú", "Metropolitana", onError = {}) { id = it }
             advanceUntilIdle()
 
             id shouldBe "1"
@@ -164,7 +164,7 @@ class OrganizacionViewModelTest : StringSpec({
             advanceUntilIdle()
             var id = ""
 
-            viewModel.buscarOCrear(" Municipalidad Demo ", "Puente Alto", "Metropolitana") { id = it }
+            viewModel.buscarOCrear(" Municipalidad Demo ", "Puente Alto", "Metropolitana", onError = {}) { id = it }
             advanceUntilIdle()
 
             id shouldBe "8"
@@ -176,6 +176,39 @@ class OrganizacionViewModelTest : StringSpec({
                             it.tipo == "Otra entidad"
                 })
             }
+        }
+    }
+
+    "buscarOCrear no duplica la organización aunque la lista aún no se haya cargado" {
+        runTest(dispatcher) {
+            val fakeRepository = repositorio()
+
+            val viewModel = OrganizacionViewModel(fakeRepository)
+            var id = ""
+
+            viewModel.buscarOCrear("Cámara de Comercio Demo", "Maipú", "Metropolitana", onError = {}) { id = it }
+            advanceUntilIdle()
+
+            id shouldBe "1"
+            coVerify(exactly = 0) { fakeRepository.guardar(any()) }
+        }
+    }
+
+    "si buscarOCrear no puede guardar avisa el error" {
+        runTest(dispatcher) {
+            val fakeRepository = repositorio()
+            coEvery { fakeRepository.guardar(any()) } throws IllegalStateException()
+
+            val viewModel = OrganizacionViewModel(fakeRepository)
+            advanceUntilIdle()
+            var error = false
+            var id = ""
+
+            viewModel.buscarOCrear("Municipalidad Demo", "Puente Alto", "Metropolitana", onError = { error = true }) { id = it }
+            advanceUntilIdle()
+
+            error shouldBe true
+            id shouldBe ""
         }
     }
 })

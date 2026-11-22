@@ -154,8 +154,8 @@ class ActivacionViewModel(
         return !hayErrores
     }
 
-    // Guarda en Room. Si se confirma la participación, cambia el estado
-    // de la oportunidad en el microservicio (PATCH).
+    // Si se confirma la participación, primero cambia el estado de la oportunidad
+    // en el microservicio (PATCH) y después guarda la activación en Room.
     fun guardar(oportunidad: OportunidadEntity?, onListo: () -> Unit) {
         val a = _estado.value
         val activacion = ActivacionEntity(
@@ -170,16 +170,15 @@ class ActivacionViewModel(
 
         _mensaje.value = ""
         viewModelScope.launch {
-            val id = repository.guardar(activacion)
-            _estado.update { it.copy(id = id) }
-
             try {
                 if (a.confirmada && oportunidad != null && oportunidad.estado != "Participación confirmada") {
                     oportunidadRepository.cambiarEstado(oportunidad, "Participación confirmada")
                 }
+                val id = repository.guardar(activacion)
+                _estado.update { it.copy(id = id) }
                 onListo()
             } catch (e: Exception) {
-                _mensaje.value = "No se pudo confirmar la participación: revisa que el microservicio esté activo"
+                _mensaje.value = "No se pudo guardar: revisa que el microservicio esté activo"
             }
         }
     }

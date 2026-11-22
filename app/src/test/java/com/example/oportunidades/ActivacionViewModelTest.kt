@@ -193,7 +193,27 @@ class ActivacionViewModelTest : StringSpec({
             advanceUntilIdle()
 
             listo shouldBe false
-            viewModel.mensaje.value shouldBe "No se pudo confirmar la participación: revisa que el microservicio esté activo"
+            viewModel.mensaje.value shouldBe "No se pudo guardar: revisa que el microservicio esté activo"
+            coVerify(exactly = 0) { fakeRepository.guardar(any()) }
+        }
+    }
+
+    "si falla el guardado en Room se muestra un mensaje y la app no se cae" {
+        runTest(dispatcher) {
+            val fakeRepository = repositorio()
+            val oportunidadRepository = mockk<OportunidadRepository>()
+            coEvery { fakeRepository.guardar(any()) } throws IllegalStateException()
+
+            val viewModel = ActivacionViewModel(fakeRepository, oportunidadRepository)
+            advanceUntilIdle()
+            viewModel.cargar(activacion.copy(confirmada = false))
+            var listo = false
+
+            viewModel.guardar(propuesta) { listo = true }
+            advanceUntilIdle()
+
+            listo shouldBe false
+            viewModel.mensaje.value shouldBe "No se pudo guardar: revisa que el microservicio esté activo"
         }
     }
 })

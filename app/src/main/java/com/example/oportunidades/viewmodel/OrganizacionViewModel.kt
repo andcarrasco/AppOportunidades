@@ -8,6 +8,7 @@ import com.example.oportunidades.model.data.local.OrganizacionEntity
 import com.example.oportunidades.repository.OrganizacionRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -58,25 +59,36 @@ class OrganizacionViewModel(
         return lista.find { it.id.toString() == organizacionId }?.nombre ?: "Sin organización"
     }
 
-    // Busca la organización por nombre y la registra si no existe (lectura de QR)
-    fun buscarOCrear(nombre: String, comuna: String, region: String, onListo: (String) -> Unit) {
-        val existente = _registros.value.find { it.nombre.equals(nombre.trim(), ignoreCase = true) }
-        if (existente != null) {
-            onListo(existente.id.toString())
-            return
-        }
-
+    // Busca la organización por nombre y la registra si no existe (lectura de QR).
+    // Se consulta Room directamente para no duplicarla si la lista aún no se ha cargado.
+    fun buscarOCrear(
+        nombre: String,
+        comuna: String,
+        region: String,
+        onError: () -> Unit,
+        onListo: (String) -> Unit
+    ) {
         viewModelScope.launch {
-            val id = repository.guardar(
-                OrganizacionEntity(
-                    nombre = nombre.trim(),
-                    tipo = "Otra entidad",
-                    comuna = comuna,
-                    region = region,
-                    observaciones = "Registrada desde un código QR"
-                )
-            )
-            onListo(id.toString())
+            try {
+                val existente = repository.obtenerTodos().first()
+                    .find { it.nombre.equals(nombre.trim(), ignoreCase = true) }
+                val id = if (existente != null) {
+                    existente.id
+                } else {
+                    repository.guardar(
+                        OrganizacionEntity(
+                            nombre = nombre.trim(),
+                            tipo = "Otra entidad",
+                            comuna = comuna,
+                            region = region,
+                            observaciones = "Registrada desde un código QR"
+                        )
+                    )
+                }
+                onListo(id.toString())
+            } catch (e: Exception) {
+                onError()
+            }
         }
     }
 

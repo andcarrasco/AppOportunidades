@@ -201,7 +201,7 @@ class GestionViewModelTest : StringSpec({
         val cambioEstado = reciente.copy(id = 3, tipo = "Cambio de estado", hora = "19:00")
         val otraOportunidad = reciente.copy(id = 4, oportunidadId = "2", hora = "20:00")
 
-        GestionViewModel.ultimaGestion(
+        crearViewModel().ultimaGestion(
             "1",
             listOf(otraOportunidad, cambioEstado, antigua, reciente)
         ) shouldBe reciente
@@ -218,8 +218,8 @@ class GestionViewModelTest : StringSpec({
         val segunda = primera.copy(id = 2, hora = "10:00")
         val tercera = segunda.copy(id = 3)
 
-        GestionViewModel.ultimaGestion("1", listOf(tercera, primera, segunda)) shouldBe tercera
-        GestionViewModel.ultimaGestion("2", listOf(primera, segunda, tercera)).shouldBeNull()
-        GestionViewModel.ultimaGestion("1", emptyList()).shouldBeNull()
+        crearViewModel().ultimaGestion("1", listOf(tercera, primera, segunda)) shouldBe tercera
+        crearViewModel().ultimaGestion("2", listOf(primera, segunda, tercera)).shouldBeNull()
+        crearViewModel().ultimaGestion("1", emptyList()).shouldBeNull()
     }
 })

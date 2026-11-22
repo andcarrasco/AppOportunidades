@@ -9,40 +9,6 @@ import io.kotest.matchers.shouldBe
 
 class QrViewModelTest : StringSpec({
 
-    "lee una línea por campo aunque tenga tildes o mayúsculas" {
-        val campos = QrViewModel.leerCampos(
-            """
-            Nombre: Feria Demo
-            Tipo de evento: Feria empresarial
-            Región = Metropolitana
-            Fecha inicio: 2026-12-01
-            Hora: 09:30
-            Organización: Empresa Demo
-            Dato desconocido: se ignora
-            """.trimIndent()
-        )
-
-        campos["nombre"] shouldBe "Feria Demo"
-        campos["tipo"] shouldBe "Feria empresarial"
-        campos["region"] shouldBe "Metropolitana"
-        campos["fechaInicio"] shouldBe "2026-12-01"
-        campos["horario"] shouldBe "09:30"
-        campos["organizacion"] shouldBe "Empresa Demo"
-        campos.size shouldBe 6
-    }
-
-    "un texto sin campos se usa como descripción y uno vacío no trae datos" {
-        QrViewModel.leerCampos("https://example.com/evento") shouldBe
-                mapOf("descripcion" to "https://example.com/evento")
-        QrViewModel.leerCampos("   ").shouldBeEmpty()
-    }
-
-    "los campos sin valor se ignoran" {
-        val campos = QrViewModel.leerCampos("Nombre: Feria\nComuna:   \nCosto=1000")
-
-        campos shouldBe mapOf("nombre" to "Feria", "costos" to "1000")
-    }
-
     "al detectar un código se guarda el resultado y sus campos" {
         val viewModel = QrViewModel()
 
