@@ -8,22 +8,29 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.oportunidades.model.Catalogos
 import com.example.oportunidades.navigation.Screen
 import com.example.oportunidades.ui.components.BarraTitulo
 import com.example.oportunidades.ui.components.EvidenciasOportunidad
 import com.example.oportunidades.ui.utils.obtenerAnchoContenido
+import com.example.oportunidades.viewmodel.ActivacionViewModel
 import com.example.oportunidades.viewmodel.ContactoViewModel
 import com.example.oportunidades.viewmodel.EvidenciaViewModel
 import com.example.oportunidades.viewmodel.MainViewModel
@@ -34,15 +41,21 @@ import com.example.oportunidades.viewmodel.SeguimientoViewModel
 
 @Composable
 fun DetalleOportunidadScreen(
+    nombre: String,
+    perfil: String,
     viewModel: OportunidadViewModel,
     organizacionViewModel: OrganizacionViewModel,
     contactoViewModel: ContactoViewModel,
     seguimientoViewModel: SeguimientoViewModel,
     resultadoViewModel: ResultadoViewModel,
     evidenciaViewModel: EvidenciaViewModel,
+    activacionViewModel: ActivacionViewModel,
     mainViewModel: MainViewModel
 ) {
     val ficha by viewModel.ficha.collectAsState()
+    val mensaje by viewModel.mensaje.collectAsState()
+    val activaciones by activacionViewModel.registros.collectAsState()
+    var confirmarEliminar by remember { mutableStateOf(false) }
     val organizaciones by organizacionViewModel.registros.collectAsState()
     val contactos by contactoViewModel.registros.collectAsState()
     val resultados by resultadoViewModel.registros.collectAsState()
@@ -76,22 +89,71 @@ fun DetalleOportunidadScreen(
                     style = MaterialTheme.typography.headlineMedium
                 )
 
-                Button(
-                    onClick = {
-                        viewModel.editarFicha()
-                        mainViewModel.navigateTo(Screen.Oportunidad, singleTop = true)
-                    }
-                ) {
-                    Text("Editar datos, prioridad o estado")
-                }
+                // Acciones de cada perfil, según el flujo del caso
+                when (perfil) {
+                    Catalogos.EJECUTIVO -> {
+                        Button(
+                            onClick = {
+                                viewModel.editarFicha()
+                                mainViewModel.navigateTo(Screen.Oportunidad, singleTop = true)
+                            }
+                        ) {
+                            Text("Editar datos del evento")
+                        }
 
-                OutlinedButton(
-                    onClick = {
-                        seguimientoViewModel.nuevo(o.id.toString())
-                        mainViewModel.navigateTo(Screen.Seguimiento, singleTop = true)
+                        OutlinedButton(
+                            onClick = {
+                                seguimientoViewModel.nuevo(o.id.toString(), nombre)
+                                mainViewModel.navigateTo(Screen.Seguimiento, singleTop = true)
+                            }
+                        ) {
+                            Text("Registrar gestión o propuesta")
+                        }
                     }
-                ) {
-                    Text("Registrar gestión o propuesta")
+
+                    Catalogos.SUPERVISOR -> {
+                        Button(
+                            onClick = {
+                                viewModel.editarFicha()
+                                mainViewModel.navigateTo(Screen.EstadoGestion, singleTop = true)
+                            }
+                        ) {
+                            Text("Gestionar estado")
+                        }
+
+                        OutlinedButton(
+                            onClick = {
+                                seguimientoViewModel.nuevo(o.id.toString(), nombre)
+                                mainViewModel.navigateTo(Screen.Seguimiento, singleTop = true)
+                            }
+                        ) {
+                            Text("Registrar seguimiento")
+                        }
+
+                        OutlinedButton(onClick = { confirmarEliminar = true }) {
+                            Text("Eliminar oportunidad")
+                        }
+                    }
+
+                    Catalogos.ACTIVACIONES -> {
+                        Button(
+                            onClick = {
+                                activacionViewModel.abrir(o.id, nombre)
+                                mainViewModel.navigateTo(Screen.Activacion, singleTop = true)
+                            }
+                        ) {
+                            Text("Coordinar activación")
+                        }
+
+                        OutlinedButton(
+                            onClick = {
+                                resultadoViewModel.abrir(o.id)
+                                mainViewModel.navigateTo(Screen.Resultado, singleTop = true)
+                            }
+                        ) {
+                            Text("Registrar resultado")
+                        }
+                    }
                 }
 
                 OutlinedButton(
@@ -100,13 +162,11 @@ fun DetalleOportunidadScreen(
                     Text("Consultar historial")
                 }
 
-                OutlinedButton(
-                    onClick = {
-                        resultadoViewModel.abrir(o.id)
-                        mainViewModel.navigateTo(Screen.Resultado, singleTop = true)
-                    }
-                ) {
-                    Text("Resultado de activación")
+                if (mensaje.isNotBlank()) {
+                    Text(
+                        mensaje,
+                        color = MaterialTheme.colorScheme.error
+                    )
                 }
 
                 Text("Organización: ${organizacionViewModel.nombre(organizaciones, o.organizacionId)}")
@@ -134,8 +194,24 @@ fun DetalleOportunidadScreen(
                 Text("Observaciones: ${o.observaciones}")
                 Text("Última actualización: ${o.actualizacion}")
 
-                HorizontalDivider()
-                EvidenciasOportunidad(o.id, evidenciaViewModel)
+                // Datos de la coordinación de la activación
+                activacionViewModel.deOportunidad(activaciones, o.id)?.let { activacion ->
+                    HorizontalDivider()
+                    Text(
+                        "Activación",
+                        style = MaterialTheme.typography.titleLarge
+                    )
+                    Text(if (activacion.confirmada) "Participación confirmada" else "Participación sin confirmar")
+                    Text("Responsable: ${activacion.responsable} · Fecha: ${activacion.fecha}")
+                    Text("Condiciones: ${activacion.condiciones}")
+                    Text(activacion.observaciones)
+                }
+
+                // Las evidencias las agrega el equipo de activaciones
+                if (perfil == Catalogos.ACTIVACIONES) {
+                    HorizontalDivider()
+                    EvidenciasOportunidad(o.id, evidenciaViewModel)
+                }
                 HorizontalDivider()
 
                 Text(
@@ -153,8 +229,33 @@ fun DetalleOportunidadScreen(
                     )
                     Text("Asistentes: ${resultado.asistentes} · Contactos: ${resultado.contactos} · Interesados: ${resultado.interesados} · Inscripciones: ${resultado.inscripciones}")
                     Text(resultado.observaciones)
+                    Text("Próximas acciones: ${resultado.proximasAcciones}")
                 }
             }
         }
+    }
+
+    // Confirmación antes de eliminar (DELETE en el microservicio)
+    if (confirmarEliminar) {
+        AlertDialog(
+            onDismissRequest = { confirmarEliminar = false },
+            title = { Text("Eliminar oportunidad") },
+            text = { Text("La oportunidad se eliminará del servidor. ¿Deseas continuar?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        confirmarEliminar = false
+                        viewModel.eliminar { mainViewModel.navigateBack() }
+                    }
+                ) {
+                    Text("Eliminar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmarEliminar = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 }

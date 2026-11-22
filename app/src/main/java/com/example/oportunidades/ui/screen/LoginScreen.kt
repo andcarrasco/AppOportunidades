@@ -10,6 +10,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -20,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.oportunidades.model.Catalogos
 import com.example.oportunidades.navigation.Screen
 import com.example.oportunidades.ui.components.BarraTitulo
 import com.example.oportunidades.ui.utils.obtenerAnchoContenido
@@ -95,11 +97,13 @@ fun LoginScreen(
                 Button(
                     onClick = {
                         if (viewModel.validarFormulario()) {
-                            mainViewModel.navigateTo(
-                                Screen.Home,
-                                popUpToRoute = Screen.Login,
-                                inclusive = true
-                            )
+                            viewModel.ingresar {
+                                mainViewModel.navigateTo(
+                                    Screen.Home,
+                                    popUpToRoute = Screen.Login,
+                                    inclusive = true
+                                )
+                            }
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -107,10 +111,20 @@ fun LoginScreen(
                     Text("Ingresar")
                 }
 
+                // Cuentas de prueba: una por cada perfil
                 Text(
-                    "Cuenta: ejecutivo@example.com\nClave: Demo2026",
-                    style = MaterialTheme.typography.bodySmall
+                    "Cuentas de prueba (clave ${Catalogos.CLAVE_DEMO})",
+                    style = MaterialTheme.typography.titleMedium
                 )
+
+                Catalogos.usuariosDemo.forEach { usuario ->
+                    OutlinedButton(
+                        onClick = { viewModel.usarCuenta(usuario.correo) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("${usuario.perfil}\n${usuario.correo}")
+                    }
+                }
             }
         }
     }

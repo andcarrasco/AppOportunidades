@@ -2,6 +2,31 @@ package com.example.oportunidades.model
 
 // Opciones que se muestran en los selectores de los formularios
 object Catalogos {
+    // Perfiles de usuario definidos en el caso
+    const val EJECUTIVO = "Ejecutivo comercial"
+    const val SUPERVISOR = "Supervisor comercial"
+    const val ACTIVACIONES = "Gestión de activaciones"
+
+    // Cuentas ficticias de prueba, una por perfil
+    const val CLAVE_DEMO = "Demo2026"
+
+    val usuariosDemo = listOf(
+        Usuario(1, "Carla Demo", "ejecutivo@example.com", EJECUTIVO, "Comercial", "Santiago"),
+        Usuario(2, "Rodrigo Demo", "supervisor@example.com", SUPERVISOR, "Comercial", "Santiago"),
+        Usuario(3, "Valentina Demo", "activaciones@example.com", ACTIVACIONES, "Activaciones", "Santiago")
+    )
+
+    // Integrantes ficticios del equipo a los que se asigna una oportunidad
+    val responsables = listOf("Carla Demo", "Rodrigo Demo", "Valentina Demo")
+
+    // Decisiones del supervisor y el estado de gestión que registra cada una
+    val decisiones = listOf(
+        "Pendiente" to "Contacto pendiente",
+        "En gestión" to "Contacto realizado",
+        "Confirmada" to "Participación confirmada",
+        "Descartada" to "Oportunidad descartada"
+    )
+
     val estados = listOf(
         "Evento identificado",
         "Contacto pendiente",

@@ -24,6 +24,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -55,11 +56,19 @@ fun QrScannerScreen(
 ) {
     val qrResult by viewModel.qrResult.collectAsState()
     val mensaje by viewModel.mensaje.collectAsState()
-    val organizaciones by organizacionViewModel.registros.collectAsState()
+    val mensajeGuardado by oportunidadViewModel.mensaje.collectAsState()
     val context = LocalContext.current
     val anchoContenido = obtenerAnchoContenido()
 
     var isScanning by remember { mutableStateOf(true) }
+    var registrando by remember { mutableStateOf(false) }
+
+    // Si el guardado falla se vuelve a habilitar el botón Registrar
+    LaunchedEffect(mensajeGuardado) {
+        if (mensajeGuardado.isNotBlank()) {
+            registrando = false
+        }
+    }
     var hasCameraPermission by remember {
         mutableStateOf(CameraPermissionHelper.hasCameraPermission(context))
     }
@@ -179,25 +188,73 @@ fun QrScannerScreen(
                         )
                     }
 
-                    Text(
-                        "Revisa y completa los datos en el formulario y presiona Guardar para registrar la oportunidad.",
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                    if (mensajeGuardado.isNotBlank()) {
+                        Text(
+                            mensajeGuardado,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
 
-                    // Pasa los datos del QR al formulario de oportunidad
+                    // Registra la oportunidad: busca o crea la organización y guarda en el microservicio.
+                    // Si faltan datos obligatorios se abre el formulario para completarlos.
                     Button(
+                        enabled = !registrando,
                         onClick = {
-                            oportunidadViewModel.cargarDesdeQr(viewModel.campos(), organizaciones)
-                            viewModel.clearResult()
-                            mainViewModel.navigateTo(
-                                Screen.Oportunidad,
-                                popUpToRoute = Screen.Qr,
-                                inclusive = true
-                            )
+                            registrando = true
+                            val campos = viewModel.campos()
+                            organizacionViewModel.buscarOCrear(
+                                campos["organizacion"] ?: "Organización sin nombre",
+                                campos["comuna"] ?: "",
+                                campos["region"] ?: ""
+                            ) { organizacionId ->
+                                oportunidadViewModel.cargarDesdeQr(campos, organizacionId)
+                                if (oportunidadViewModel.validarFormulario()) {
+                                    oportunidadViewModel.guardar {
+                                        registrando = false
+                                        viewModel.clearResult()
+                                        mainViewModel.navigateTo(
+                                            Screen.Resumen,
+                                            popUpToRoute = Screen.Qr,
+                                            inclusive = true
+                                        )
+                                    }
+                                } else {
+                                    registrando = false
+                                    viewModel.clearResult()
+                                    mainViewModel.navigateTo(
+                                        Screen.Oportunidad,
+                                        popUpToRoute = Screen.Qr,
+                                        inclusive = true
+                                    )
+                                }
+                            }
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Crear oportunidad con estos datos")
+                        Text("Registrar oportunidad")
+                    }
+
+                    // Pasa los datos del QR al formulario para revisarlos antes de guardar
+                    OutlinedButton(
+                        onClick = {
+                            val campos = viewModel.campos()
+                            organizacionViewModel.buscarOCrear(
+                                campos["organizacion"] ?: "Organización sin nombre",
+                                campos["comuna"] ?: "",
+                                campos["region"] ?: ""
+                            ) { organizacionId ->
+                                oportunidadViewModel.cargarDesdeQr(campos, organizacionId)
+                                viewModel.clearResult()
+                                mainViewModel.navigateTo(
+                                    Screen.Oportunidad,
+                                    popUpToRoute = Screen.Qr,
+                                    inclusive = true
+                                )
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Revisar en el formulario")
                     }
 
                     OutlinedButton(

@@ -11,5 +11,6 @@ data class ResultadoUiState(
     val interesados: String = "",
     val inscripciones: String = "",
     val observaciones: String = "",
+    val proximasAcciones: String = "",
     val errores: ResultadoErrores = ResultadoErrores() // Objeto que contiene los errores por campo
 )

@@ -58,6 +58,7 @@ fun OportunidadCard(oportunidad: OportunidadEntity, onAbrir: () -> Unit) {
 
 @Composable
 fun OportunidadesScreen(
+    perfil: String,
     gestion: GestionViewModel,
     oportunidadViewModel: OportunidadViewModel,
     organizacionViewModel: OrganizacionViewModel,
@@ -68,8 +69,9 @@ fun OportunidadesScreen(
     val filtros by gestion.filtros.collectAsState()
     val cargando by gestion.cargando.collectAsState()
     val organizaciones by organizacionViewModel.registros.collectAsState()
+    val mensaje by oportunidadViewModel.mensaje.collectAsState()
     val anchoContenido = obtenerAnchoContenido()
-    var mostrarFiltros by remember { mutableStateOf(false) }
+    var mostrarFiltros by remember { mutableStateOf(perfil == Catalogos.SUPERVISOR) }
 
     Scaffold(
         topBar = { BarraTitulo("Oportunidades") }
@@ -87,30 +89,45 @@ fun OportunidadesScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Button(
-                    onClick = {
-                        oportunidadViewModel.nuevo()
-                        mainViewModel.navigateTo(Screen.Oportunidad, singleTop = true)
+                // Solo el ejecutivo comercial registra oportunidades
+                if (perfil == Catalogos.EJECUTIVO) {
+                    Button(
+                        onClick = {
+                            oportunidadViewModel.nuevo()
+                            mainViewModel.navigateTo(Screen.Oportunidad, singleTop = true)
+                        }
+                    ) {
+                        Text("Registrar oportunidad")
                     }
-                ) {
-                    Text("Registrar oportunidad")
+
+                    OutlinedButton(
+                        onClick = {
+                            qrViewModel.clearResult()
+                            mainViewModel.navigateTo(Screen.Qr, singleTop = true)
+                        }
+                    ) {
+                        Text("Escanear QR de oportunidad")
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            mainViewModel.navigateTo(Screen.Organizaciones, singleTop = true)
+                        }
+                    ) {
+                        Text("Organizaciones y contactos")
+                    }
                 }
 
-                OutlinedButton(
-                    onClick = {
-                        qrViewModel.clearResult()
-                        mainViewModel.navigateTo(Screen.Qr, singleTop = true)
-                    }
-                ) {
-                    Text("Escanear QR de oportunidad")
+                // Trae los datos actualizados desde el microservicio
+                OutlinedButton(onClick = { oportunidadViewModel.sincronizar() }) {
+                    Text("Actualizar desde el servidor")
                 }
 
-                OutlinedButton(
-                    onClick = {
-                        mainViewModel.navigateTo(Screen.Organizaciones, singleTop = true)
-                    }
-                ) {
-                    Text("Organizaciones y contactos")
+                if (mensaje.isNotBlank()) {
+                    Text(
+                        mensaje,
+                        color = MaterialTheme.colorScheme.error
+                    )
                 }
 
                 // Búsqueda y filtros

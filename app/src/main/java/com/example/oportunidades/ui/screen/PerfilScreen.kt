@@ -36,6 +36,8 @@ import com.example.oportunidades.viewmodel.PerfilViewModel
 
 @Composable
 fun PerfilScreen(
+    nombre: String,
+    perfil: String,
     viewModel: PerfilViewModel,
     onSalir: () -> Unit
 ) {
@@ -97,10 +99,10 @@ fun PerfilScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    "Ejecutivo Demo",
+                    nombre,
                     style = MaterialTheme.typography.headlineMedium
                 )
-                Text("Equipo comercial · Cuenta ficticia")
+                Text("$perfil · Cuenta ficticia")
 
                 ImagenInteligente(imagen) {
                     viewModel.limpiarImagen()
@@ -151,7 +153,7 @@ fun PerfilScreen(
                     onClick = onSalir,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Cerrar sesión")
+                    Text("Cerrar sesión / Cambiar perfil")
                 }
             }
         }

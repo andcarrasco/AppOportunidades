@@ -1,21 +1,20 @@
 package com.example.oportunidades.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.oportunidades.model.Fechas
 import com.example.oportunidades.model.ResultadoErrores
 import com.example.oportunidades.model.ResultadoUiState
-import com.example.oportunidades.model.data.local.AppDatabase
 import com.example.oportunidades.model.data.local.ResultadoEntity
+import com.example.oportunidades.repository.ResultadoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class ResultadoViewModel(app: Application) : AndroidViewModel(app) {
-
-    private val dao = AppDatabase.getDatabase(app).resultadoDao()
+class ResultadoViewModel(
+    private val repository: ResultadoRepository = ResultadoRepository()
+) : ViewModel() {
 
     // Estado interno mutable
     private val _estado = MutableStateFlow(ResultadoUiState())
@@ -29,7 +28,7 @@ class ResultadoViewModel(app: Application) : AndroidViewModel(app) {
 
     init {
         viewModelScope.launch {
-            dao.obtenerTodos().collect { lista ->
+            repository.obtenerTodos().collect { lista ->
                 _registros.value = lista
             }
         }
@@ -55,7 +54,8 @@ class ResultadoViewModel(app: Application) : AndroidViewModel(app) {
             contactos = registro.contactos,
             interesados = registro.interesados,
             inscripciones = registro.inscripciones,
-            observaciones = registro.observaciones
+            observaciones = registro.observaciones,
+            proximasAcciones = registro.proximasAcciones
         )
     }
 
@@ -138,6 +138,12 @@ class ResultadoViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun onProximasAccionesChange(valor: String) {
+        _estado.update {
+            it.copy(proximasAcciones = valor)
+        }
+    }
+
     // Indica si un número es inválido (vacío está permitido)
     private fun numeroInvalido(valor: String): Boolean {
         val numero = valor.toIntOrNull()
@@ -212,16 +218,13 @@ class ResultadoViewModel(app: Application) : AndroidViewModel(app) {
             contactos = a.contactos,
             interesados = a.interesados,
             inscripciones = a.inscripciones,
-            observaciones = a.observaciones
+            observaciones = a.observaciones,
+            proximasAcciones = a.proximasAcciones
         )
 
         viewModelScope.launch {
-            if (a.id == 0L) {
-                val id = dao.insertar(resultado)
-                _estado.update { it.copy(id = id) }
-            } else {
-                dao.modificar(resultado)
-            }
+            val id = repository.guardar(resultado)
+            _estado.update { it.copy(id = id) }
             onListo()
         }
     }

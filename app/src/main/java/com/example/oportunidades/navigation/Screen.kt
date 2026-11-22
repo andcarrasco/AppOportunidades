@@ -17,4 +17,8 @@ sealed class Screen(val route: String) {
     data object Pendientes : Screen("pendientes")
     data object Perfil : Screen("perfil")
     data object Qr : Screen("qr")
+    data object EstadoGestion : Screen("estado_gestion")
+    data object Activaciones : Screen("activaciones")
+    data object Activacion : Screen("activacion")
+    data object Feriados : Screen("feriados")
 }

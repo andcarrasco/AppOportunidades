@@ -164,6 +164,13 @@ fun ResultadoScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
+                OutlinedTextField(
+                    value = estado.proximasAcciones,
+                    onValueChange = viewModel::onProximasAccionesChange,
+                    label = { Text("Próximas acciones") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
                 // Botón: guardar
                 Button(
                     onClick = {
