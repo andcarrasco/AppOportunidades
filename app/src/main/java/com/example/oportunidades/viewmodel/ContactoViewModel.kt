@@ -1,20 +1,19 @@
 package com.example.oportunidades.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.oportunidades.model.ContactoErrores
 import com.example.oportunidades.model.ContactoUiState
-import com.example.oportunidades.model.data.local.AppDatabase
 import com.example.oportunidades.model.data.local.ContactoEntity
+import com.example.oportunidades.repository.ContactoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class ContactoViewModel(app: Application) : AndroidViewModel(app) {
-
-    private val dao = AppDatabase.getDatabase(app).contactoDao()
+class ContactoViewModel(
+    private val repository: ContactoRepository = ContactoRepository()
+) : ViewModel() {
 
     // Estado interno mutable
     private val _estado = MutableStateFlow(ContactoUiState())
@@ -28,7 +27,7 @@ class ContactoViewModel(app: Application) : AndroidViewModel(app) {
 
     init {
         viewModelScope.launch {
-            dao.obtenerTodos().collect { lista ->
+            repository.obtenerTodos().collect { lista ->
                 _registros.value = lista
             }
         }
@@ -216,12 +215,8 @@ class ContactoViewModel(app: Application) : AndroidViewModel(app) {
         )
 
         viewModelScope.launch {
-            if (a.id == 0L) {
-                val id = dao.insertar(contacto)
-                _estado.update { it.copy(id = id) }
-            } else {
-                dao.modificar(contacto)
-            }
+            val id = repository.guardar(contacto)
+            _estado.update { it.copy(id = id) }
             onListo()
         }
     }

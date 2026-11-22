@@ -61,7 +61,7 @@ fun ResumenOportunidadScreen(
             ) {
                 AnimatedVisibility(visible) {
                     Text(
-                        "Guardado correctamente en este dispositivo",
+                        "Guardado correctamente en el servidor",
                         color = MaterialTheme.colorScheme.primary
                     )
                 }

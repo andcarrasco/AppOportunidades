@@ -1,26 +1,21 @@
 package com.example.oportunidades.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.room.withTransaction
 import com.example.oportunidades.model.Catalogos
 import com.example.oportunidades.model.Fechas
 import com.example.oportunidades.model.OportunidadErrores
 import com.example.oportunidades.model.OportunidadUiState
-import com.example.oportunidades.model.data.local.AppDatabase
 import com.example.oportunidades.model.data.local.OportunidadEntity
-import com.example.oportunidades.model.data.local.OrganizacionEntity
-import com.example.oportunidades.model.data.local.SeguimientoEntity
+import com.example.oportunidades.repository.OportunidadRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class OportunidadViewModel(app: Application) : AndroidViewModel(app) {
-
-    private val db = AppDatabase.getDatabase(app)
-    private val dao = db.oportunidadDao()
+class OportunidadViewModel(
+    private val repository: OportunidadRepository = OportunidadRepository()
+) : ViewModel() {
 
     // Estado interno mutable
     private val _estado = MutableStateFlow(OportunidadUiState())
@@ -28,7 +23,7 @@ class OportunidadViewModel(app: Application) : AndroidViewModel(app) {
     // Estado expuesto para la UI
     val estado: StateFlow<OportunidadUiState> = _estado
 
-    // Oportunidades guardadas en Room
+    // Oportunidades guardadas en Room (copia de las del microservicio)
     private val _registros = MutableStateFlow<List<OportunidadEntity>>(emptyList())
     val registros: StateFlow<List<OportunidadEntity>> = _registros
 
@@ -36,11 +31,35 @@ class OportunidadViewModel(app: Application) : AndroidViewModel(app) {
     private val _ficha = MutableStateFlow<OportunidadEntity?>(null)
     val ficha: StateFlow<OportunidadEntity?> = _ficha
 
+    // Mensaje para la UI cuando el microservicio no responde
+    private val _mensaje = MutableStateFlow("")
+    val mensaje: StateFlow<String> = _mensaje
+
+    // Nombre del usuario que inició sesión, se usa como responsable por defecto
+    private var usuarioActual = ""
+
     init {
         viewModelScope.launch {
-            dao.obtenerTodos().collect { lista ->
+            repository.obtenerTodos().collect { lista ->
                 _registros.value = lista
                 actualizarFicha()
+            }
+        }
+        sincronizar()
+    }
+
+    fun usuario(nombre: String) {
+        usuarioActual = nombre
+    }
+
+    // GET al microservicio. Si no responde se muestran los datos guardados en Room.
+    fun sincronizar() {
+        viewModelScope.launch {
+            try {
+                repository.sincronizar()
+                _mensaje.value = ""
+            } catch (e: Exception) {
+                _mensaje.value = "Sin conexión con el microservicio: se muestran los datos guardados"
             }
         }
     }
@@ -56,7 +75,7 @@ class OportunidadViewModel(app: Application) : AndroidViewModel(app) {
             estado = "Evento identificado",
             prioridad = "Media",
             fechaDeteccion = Fechas.hoy(),
-            responsable = "Ejecutivo Demo",
+            responsable = usuarioActual,
             costos = "0",
             asistentes = "0"
         )
@@ -100,17 +119,9 @@ class OportunidadViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     // Prepara una oportunidad nueva con los datos leídos desde un código QR.
-    // Los selectores solo aceptan valores del catálogo; el resto se completa en el formulario.
-    fun cargarDesdeQr(campos: Map<String, String>, organizaciones: List<OrganizacionEntity>) {
+    // Los selectores solo aceptan valores del catálogo.
+    fun cargarDesdeQr(campos: Map<String, String>, organizacionId: String) {
         nuevo()
-
-        fun catalogo(valor: String?, opciones: List<String>): String? {
-            return opciones.find { it.equals(valor?.trim(), ignoreCase = true) }
-        }
-
-        val organizacion = organizaciones.find {
-            it.nombre.equals(campos["organizacion"]?.trim(), ignoreCase = true)
-        }
 
         _estado.update { a ->
             a.copy(
@@ -123,7 +134,7 @@ class OportunidadViewModel(app: Application) : AndroidViewModel(app) {
                 prioridad = catalogo(campos["prioridad"], Catalogos.prioridades) ?: a.prioridad,
                 potencial = catalogo(campos["potencial"], Catalogos.potenciales) ?: a.potencial,
                 estado = catalogo(campos["estado"], Catalogos.estados) ?: a.estado,
-                organizacionId = organizacion?.id?.toString() ?: a.organizacionId,
+                organizacionId = organizacionId,
                 fechaInicio = campos["fechaInicio"] ?: a.fechaInicio,
                 fechaTermino = campos["fechaTermino"] ?: campos["fechaInicio"] ?: a.fechaTermino,
                 horario = campos["horario"] ?: a.horario,
@@ -139,6 +150,11 @@ class OportunidadViewModel(app: Application) : AndroidViewModel(app) {
                 observaciones = campos["observaciones"] ?: a.observaciones
             )
         }
+    }
+
+    // Busca el valor en las opciones del catálogo, sin importar mayúsculas
+    private fun catalogo(valor: String?, opciones: List<String>): String? {
+        return opciones.find { it.equals(valor?.trim(), ignoreCase = true) }
     }
 
     // Actualiza el campo nombre y limpia su error
@@ -468,7 +484,7 @@ class OportunidadViewModel(app: Application) : AndroidViewModel(app) {
         return !hayErrores
     }
 
-    // Guarda en Room: inserta si es nueva o modifica si ya existe.
+    // Guarda en el microservicio (POST o PUT) y deja la copia en Room.
     // Si cambia el estado de gestión, se registra en el historial.
     fun guardar(onListo: () -> Unit) {
         val a = _estado.value
@@ -500,37 +516,57 @@ class OportunidadViewModel(app: Application) : AndroidViewModel(app) {
             actualizacion = Fechas.hoy() + " " + Fechas.hora()
         )
 
+        _mensaje.value = ""
         viewModelScope.launch {
-            // La ficha y su historial se guardan juntos en una transacción
-            val id = db.withTransaction {
-                val anterior = if (a.id == 0L) null else dao.obtener(a.id)
-                val guardadoId = if (a.id == 0L) {
-                    dao.insertar(oportunidad)
-                } else {
-                    dao.modificar(oportunidad)
-                    a.id
-                }
-
-                if (anterior == null || anterior.estado != oportunidad.estado) {
-                    db.seguimientoDao().insertar(
-                        SeguimientoEntity(
-                            oportunidadId = guardadoId.toString(),
-                            responsable = oportunidad.responsable,
-                            tipo = "Cambio de estado",
-                            fecha = Fechas.hoy(),
-                            hora = Fechas.hora(),
-                            resultado = if (anterior == null)
-                                "Registro: ${oportunidad.estado}"
-                            else "${anterior.estado} → ${oportunidad.estado}"
-                        )
-                    )
-                }
-                guardadoId
+            try {
+                val guardada = repository.guardar(oportunidad)
+                _estado.update { it.copy(id = guardada.id) }
+                _ficha.value = guardada
+                _mensaje.value = ""
+                onListo()
+            } catch (e: Exception) {
+                _mensaje.value = "No se pudo guardar: revisa que el microservicio esté activo"
             }
-
-            _estado.update { it.copy(id = id) }
-            actualizarFicha()
-            onListo()
         }
+    }
+
+    // PATCH: cambia solo el estado de la oportunidad seleccionada
+    fun cambiarEstado(estado: String, onListo: () -> Unit) {
+        val actual = _ficha.value ?: return
+
+        viewModelScope.launch {
+            try {
+                _ficha.value = repository.cambiarEstado(actual, estado)
+                _mensaje.value = ""
+                onListo()
+            } catch (e: Exception) {
+                _mensaje.value = "No se pudo cambiar el estado: revisa que el microservicio esté activo"
+            }
+        }
+    }
+
+    // DELETE: elimina la oportunidad seleccionada
+    fun eliminar(onListo: () -> Unit) {
+        val actual = _ficha.value ?: return
+
+        viewModelScope.launch {
+            try {
+                repository.eliminar(actual)
+                _estado.value = OportunidadUiState()
+                _ficha.value = null
+                _mensaje.value = ""
+                onListo()
+            } catch (e: Exception) {
+                _mensaje.value = "No se pudo eliminar: revisa que el microservicio esté activo"
+            }
+        }
+    }
+
+    fun mensaje(valor: String) {
+        _mensaje.value = valor
+    }
+
+    fun limpiarMensaje() {
+        _mensaje.value = ""
     }
 }

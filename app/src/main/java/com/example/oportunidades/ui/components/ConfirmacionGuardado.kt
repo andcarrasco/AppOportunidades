@@ -15,7 +15,7 @@ fun ConfirmacionGuardado(
         AlertDialog(
             onDismissRequest = onContinuar,
             title = { Text("Registro guardado") },
-            text = { Text("Los datos se guardaron en este dispositivo.") },
+            text = { Text("Los datos quedaron guardados correctamente.") },
             confirmButton = {
                 TextButton(onClick = onContinuar) {
                     Text("Continuar")

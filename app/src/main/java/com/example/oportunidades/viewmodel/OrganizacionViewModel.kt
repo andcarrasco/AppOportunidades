@@ -1,20 +1,19 @@
 package com.example.oportunidades.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.oportunidades.model.OrganizacionErrores
 import com.example.oportunidades.model.OrganizacionUiState
-import com.example.oportunidades.model.data.local.AppDatabase
 import com.example.oportunidades.model.data.local.OrganizacionEntity
+import com.example.oportunidades.repository.OrganizacionRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class OrganizacionViewModel(app: Application) : AndroidViewModel(app) {
-
-    private val dao = AppDatabase.getDatabase(app).organizacionDao()
+class OrganizacionViewModel(
+    private val repository: OrganizacionRepository = OrganizacionRepository()
+) : ViewModel() {
 
     // Estado interno mutable
     private val _estado = MutableStateFlow(OrganizacionUiState())
@@ -28,7 +27,7 @@ class OrganizacionViewModel(app: Application) : AndroidViewModel(app) {
 
     init {
         viewModelScope.launch {
-            dao.obtenerTodos().collect { lista ->
+            repository.obtenerTodos().collect { lista ->
                 _registros.value = lista
             }
         }
@@ -57,6 +56,28 @@ class OrganizacionViewModel(app: Application) : AndroidViewModel(app) {
     // Nombre de una organización, para mostrarlo en otras pantallas
     fun nombre(lista: List<OrganizacionEntity>, organizacionId: String): String {
         return lista.find { it.id.toString() == organizacionId }?.nombre ?: "Sin organización"
+    }
+
+    // Busca la organización por nombre y la registra si no existe (lectura de QR)
+    fun buscarOCrear(nombre: String, comuna: String, region: String, onListo: (String) -> Unit) {
+        val existente = _registros.value.find { it.nombre.equals(nombre.trim(), ignoreCase = true) }
+        if (existente != null) {
+            onListo(existente.id.toString())
+            return
+        }
+
+        viewModelScope.launch {
+            val id = repository.guardar(
+                OrganizacionEntity(
+                    nombre = nombre.trim(),
+                    tipo = "Otra entidad",
+                    comuna = comuna,
+                    region = region,
+                    observaciones = "Registrada desde un código QR"
+                )
+            )
+            onListo(id.toString())
+        }
     }
 
     // Actualiza el campo nombre y limpia su error
@@ -188,12 +209,8 @@ class OrganizacionViewModel(app: Application) : AndroidViewModel(app) {
         )
 
         viewModelScope.launch {
-            if (a.id == 0L) {
-                val id = dao.insertar(organizacion)
-                _estado.update { it.copy(id = id) }
-            } else {
-                dao.modificar(organizacion)
-            }
+            val id = repository.guardar(organizacion)
+            _estado.update { it.copy(id = id) }
             onListo()
         }
     }

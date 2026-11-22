@@ -36,6 +36,7 @@ fun OportunidadScreen(
 ) {
     val estado by viewModel.estado.collectAsState()
     val organizaciones by organizacionViewModel.registros.collectAsState()
+    val mensaje by viewModel.mensaje.collectAsState()
     val anchoContenido = obtenerAnchoContenido()
 
     Scaffold(
@@ -392,6 +393,13 @@ fun OportunidadScreen(
                     },
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                if (mensaje.isNotBlank()) {
+                    Text(
+                        mensaje,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
 
                 // Botón: guardar y pasar al resumen
                 Button(

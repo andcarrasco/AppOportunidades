@@ -1,24 +1,27 @@
 package com.example.oportunidades.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.oportunidades.model.Fechas
 import com.example.oportunidades.model.FiltrosErrores
 import com.example.oportunidades.model.FiltrosUiState
-import com.example.oportunidades.model.data.local.AppDatabase
 import com.example.oportunidades.model.data.local.OportunidadEntity
 import com.example.oportunidades.model.data.local.ResultadoEntity
 import com.example.oportunidades.model.data.local.SeguimientoEntity
+import com.example.oportunidades.repository.OportunidadRepository
+import com.example.oportunidades.repository.ResultadoRepository
+import com.example.oportunidades.repository.SeguimientoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 // Consulta, filtros y avisos de las oportunidades
-class GestionViewModel(app: Application) : AndroidViewModel(app) {
-
-    private val db = AppDatabase.getDatabase(app)
+class GestionViewModel(
+    private val oportunidadRepository: OportunidadRepository = OportunidadRepository(),
+    private val seguimientoRepository: SeguimientoRepository = SeguimientoRepository(),
+    private val resultadoRepository: ResultadoRepository = ResultadoRepository()
+) : ViewModel() {
 
     // Estado interno mutable de los filtros
     private val _filtros = MutableStateFlow(FiltrosUiState())
@@ -41,18 +44,18 @@ class GestionViewModel(app: Application) : AndroidViewModel(app) {
 
     init {
         viewModelScope.launch {
-            db.oportunidadDao().obtenerTodos().collect { lista ->
+            oportunidadRepository.obtenerTodos().collect { lista ->
                 _oportunidades.value = lista
                 _cargando.value = false
             }
         }
         viewModelScope.launch {
-            db.seguimientoDao().obtenerTodos().collect { lista ->
+            seguimientoRepository.obtenerTodos().collect { lista ->
                 _seguimientos.value = lista
             }
         }
         viewModelScope.launch {
-            db.resultadoDao().obtenerTodos().collect { lista ->
+            resultadoRepository.obtenerTodos().collect { lista ->
                 _resultados.value = lista
             }
         }

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
 
 @Database(
     entities = [
@@ -11,9 +12,10 @@ import androidx.room.RoomDatabase
         ContactoEntity::class,
         OportunidadEntity::class,
         SeguimientoEntity::class,
-        ResultadoEntity::class
+        ResultadoEntity::class,
+        ActivacionEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -23,6 +25,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun oportunidadDao(): OportunidadDao
     abstract fun seguimientoDao(): SeguimientoDao
     abstract fun resultadoDao(): ResultadoDao
+    abstract fun activacionDao(): ActivacionDao
 
     companion object {
         @Volatile
@@ -34,8 +37,38 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "oportunidades_database"
-                ).build().also { INSTANCE = it }
+                ).fallbackToDestructiveMigration(true)
+                    .addCallback(datosIniciales)
+                    .build().also { INSTANCE = it }
             }
+        }
+
+        // Organizaciones ficticias con los mismos id que usan las oportunidades del microservicio
+        private val datosIniciales = object : RoomDatabase.Callback() {
+            override fun onCreate(db: SupportSQLiteDatabase) {
+                super.onCreate(db)
+                insertarOrganizaciones(db)
+            }
+
+            override fun onDestructiveMigration(db: SupportSQLiteDatabase) {
+                super.onDestructiveMigration(db)
+                insertarOrganizaciones(db)
+            }
+        }
+
+        private fun insertarOrganizaciones(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "INSERT INTO organizaciones " +
+                        "(id, nombre, tipo, rubro, comuna, region, sitioWeb, publico, observaciones) " +
+                        "VALUES (1, 'Municipalidad Demo', 'Municipalidad', 'Servicios públicos', 'Puente Alto', " +
+                        "'Metropolitana', 'www.municipalidad-demo.cl', 'Vecinos', 'Datos ficticios')"
+            )
+            db.execSQL(
+                "INSERT INTO organizaciones " +
+                        "(id, nombre, tipo, rubro, comuna, region, sitioWeb, publico, observaciones) " +
+                        "VALUES (2, 'Empresa Demo', 'Empresa', 'Servicios', 'Las Condes', " +
+                        "'Metropolitana', 'www.empresa-demo.cl', 'Colaboradores', 'Datos ficticios')"
+            )
         }
     }
 }

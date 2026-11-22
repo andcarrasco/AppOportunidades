@@ -1,21 +1,20 @@
 package com.example.oportunidades.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.oportunidades.model.Fechas
 import com.example.oportunidades.model.SeguimientoErrores
 import com.example.oportunidades.model.SeguimientoUiState
-import com.example.oportunidades.model.data.local.AppDatabase
 import com.example.oportunidades.model.data.local.SeguimientoEntity
+import com.example.oportunidades.repository.SeguimientoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class SeguimientoViewModel(app: Application) : AndroidViewModel(app) {
-
-    private val dao = AppDatabase.getDatabase(app).seguimientoDao()
+class SeguimientoViewModel(
+    private val repository: SeguimientoRepository = SeguimientoRepository()
+) : ViewModel() {
 
     // Estado interno mutable
     private val _estado = MutableStateFlow(SeguimientoUiState())
@@ -29,17 +28,17 @@ class SeguimientoViewModel(app: Application) : AndroidViewModel(app) {
 
     init {
         viewModelScope.launch {
-            dao.obtenerTodos().collect { lista ->
+            repository.obtenerTodos().collect { lista ->
                 _registros.value = lista
             }
         }
     }
 
     // Limpia el formulario con valores iniciales para una gestión nueva
-    fun nuevo(oportunidadId: String = "") {
+    fun nuevo(oportunidadId: String = "", responsable: String = "") {
         _estado.value = SeguimientoUiState(
             oportunidadId = oportunidadId,
-            responsable = "Ejecutivo Demo",
+            responsable = responsable,
             fecha = Fechas.hoy(),
             hora = "09:00"
         )
@@ -226,12 +225,8 @@ class SeguimientoViewModel(app: Application) : AndroidViewModel(app) {
         )
 
         viewModelScope.launch {
-            if (a.id == 0L) {
-                val id = dao.insertar(seguimiento)
-                _estado.update { it.copy(id = id) }
-            } else {
-                dao.modificar(seguimiento)
-            }
+            val id = repository.guardar(seguimiento)
+            _estado.update { it.copy(id = id) }
             onListo()
         }
     }

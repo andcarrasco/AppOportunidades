@@ -1,19 +1,34 @@
 package com.example.oportunidades.model.data.local
 
 import androidx.room.Dao
-import androidx.room.Insert
+import androidx.room.Delete
 import androidx.room.Query
-import androidx.room.Update
+import androidx.room.Transaction
+import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface OportunidadDao {
 
-    @Insert
-    suspend fun insertar(oportunidad: OportunidadEntity): Long
+    // Inserta o reemplaza usando el id que entrega el microservicio
+    @Upsert
+    suspend fun guardar(oportunidad: OportunidadEntity)
 
-    @Update
-    suspend fun modificar(oportunidad: OportunidadEntity)
+    @Upsert
+    suspend fun guardarTodos(oportunidades: List<OportunidadEntity>)
+
+    @Delete
+    suspend fun eliminar(oportunidad: OportunidadEntity)
+
+    @Query("DELETE FROM oportunidades")
+    suspend fun eliminarTodos()
+
+    // Deja en Room la misma lista que tiene el microservicio
+    @Transaction
+    suspend fun reemplazarTodos(oportunidades: List<OportunidadEntity>) {
+        eliminarTodos()
+        guardarTodos(oportunidades)
+    }
 
     @Query("SELECT * FROM oportunidades ORDER BY id DESC")
     fun obtenerTodos(): Flow<List<OportunidadEntity>>
