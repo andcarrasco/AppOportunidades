@@ -17,7 +17,7 @@ import io.mockk.mockk
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
-import okhttp3.ResponseBody.Companion.toResponseBody
+import okhttp3.ResponseBody
 import retrofit2.Response
 
 class OportunidadRepositoryTest : StringSpec({
@@ -152,7 +152,7 @@ class OportunidadRepositoryTest : StringSpec({
     "eliminar() no borra la copia local si el microservicio responde con error" {
         val mockDao = mockk<OportunidadDao>(relaxed = true)
         val mockApi = mockk<OportunidadApiService>()
-        coEvery { mockApi.eliminar(3) } returns Response.error<Unit>(404, "".toResponseBody())
+        coEvery { mockApi.eliminar(3) } returns Response.error<Unit>(404, ResponseBody.create(null, ""))
         val repo = OportunidadRepository(mockDao, mockk(), mockApi)
 
         runTest {

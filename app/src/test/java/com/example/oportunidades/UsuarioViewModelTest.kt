@@ -17,7 +17,7 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import okhttp3.ResponseBody.Companion.toResponseBody
+import okhttp3.ResponseBody
 import retrofit2.HttpException
 import retrofit2.Response
 import java.io.IOException
@@ -94,7 +94,7 @@ class UsuarioViewModelTest : StringSpec({
         runTest(dispatcher) {
             val fakeRepository = mockk<UsuarioRepository>()
             coEvery { fakeRepository.login(any(), any()) } throws
-                    HttpException(Response.error<Any>(401, "".toResponseBody()))
+                    HttpException(Response.error<Any>(401, ResponseBody.create(null, "")))
 
             val viewModel = UsuarioViewModel(fakeRepository)
             viewModel.onCorreoChange("supervisor@example.com")
@@ -114,7 +114,7 @@ class UsuarioViewModelTest : StringSpec({
         runTest(dispatcher) {
             val fakeRepository = mockk<UsuarioRepository>()
             coEvery { fakeRepository.login(any(), any()) } throws
-                    HttpException(Response.error<Any>(403, "".toResponseBody()))
+                    HttpException(Response.error<Any>(403, ResponseBody.create(null, "")))
 
             val viewModel = UsuarioViewModel(fakeRepository)
             viewModel.onCorreoChange("supervisor@example.com")
@@ -132,7 +132,7 @@ class UsuarioViewModelTest : StringSpec({
         runTest(dispatcher) {
             val fakeRepository = mockk<UsuarioRepository>()
             coEvery { fakeRepository.login(any(), any()) } throws
-                    HttpException(Response.error<Any>(500, "".toResponseBody()))
+                    HttpException(Response.error<Any>(500, ResponseBody.create(null, "")))
 
             val viewModel = UsuarioViewModel(fakeRepository)
             viewModel.onCorreoChange("supervisor@example.com")

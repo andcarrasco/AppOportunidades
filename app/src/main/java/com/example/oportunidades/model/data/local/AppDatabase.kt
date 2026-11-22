@@ -43,28 +43,24 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        // Organizaciones ficticias con los mismos id que usan las oportunidades del microservicio
+        // Organizaciones ficticias con los mismos id que usan las oportunidades del microservicio.
+        // Se insertan al abrir la base, cuando las tablas ya existen; si ya están, no se repiten.
         private val datosIniciales = object : RoomDatabase.Callback() {
-            override fun onCreate(db: SupportSQLiteDatabase) {
-                super.onCreate(db)
-                insertarOrganizaciones(db)
-            }
-
-            override fun onDestructiveMigration(db: SupportSQLiteDatabase) {
-                super.onDestructiveMigration(db)
+            override fun onOpen(db: SupportSQLiteDatabase) {
+                super.onOpen(db)
                 insertarOrganizaciones(db)
             }
         }
 
         private fun insertarOrganizaciones(db: SupportSQLiteDatabase) {
             db.execSQL(
-                "INSERT INTO organizaciones " +
+                "INSERT OR IGNORE INTO organizaciones " +
                         "(id, nombre, tipo, rubro, comuna, region, sitioWeb, publico, observaciones) " +
                         "VALUES (1, 'Municipalidad Demo', 'Municipalidad', 'Servicios públicos', 'Puente Alto', " +
                         "'Metropolitana', 'www.municipalidad-demo.cl', 'Vecinos', 'Datos ficticios')"
             )
             db.execSQL(
-                "INSERT INTO organizaciones " +
+                "INSERT OR IGNORE INTO organizaciones " +
                         "(id, nombre, tipo, rubro, comuna, region, sitioWeb, publico, observaciones) " +
                         "VALUES (2, 'Empresa Demo', 'Empresa', 'Servicios', 'Las Condes', " +
                         "'Metropolitana', 'www.empresa-demo.cl', 'Colaboradores', 'Datos ficticios')"
