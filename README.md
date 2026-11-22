@@ -1,162 +1,161 @@
 # AppOportunidades
 
-Aplicación Android para registrar y gestionar oportunidades de eventos y activaciones corporativas (Caso 003V: Gestión móvil de oportunidades y activaciones corporativas). Corresponde a la Evaluación Parcial 4 de Desarrollo de Aplicaciones Móviles, DSY1105, y continúa el trabajo de la Evaluación Parcial 2.
+App Android para registrar y hacer seguimiento a oportunidades de eventos y activaciones corporativas. Está basada en el caso 003V (Gestión móvil de oportunidades y activaciones corporativas) y es nuestra entrega de la Evaluación Parcial 4 de DSY1105, Desarrollo de Aplicaciones Móviles. Partimos desde lo que entregamos en la Parcial 2 y le fuimos agregando lo que pedía esta evaluación.
 
 ## 1. Nombre del proyecto
 
-AppOportunidades: app móvil (Kotlin, Jetpack Compose, Material 3, MVVM) con dos microservicios propios en Spring Boot y consumo de una API externa.
+AppOportunidades. La app está hecha en Kotlin con Jetpack Compose y Material 3, usando MVVM como en las guías del curso. El backend son dos microservicios en Spring Boot hechos por nosotros, y además la app consume una API externa de feriados.
 
 ## 2. Integrantes
 
 - Andrés Carrasco
+- Pablo Rojas
 
-Toda la información usada para la demostración es ficticia: usuarios, organizaciones, contactos, costos y resultados.
+Todos los datos que aparecen en la app (usuarios, organizaciones, contactos, costos, resultados) son inventados para la demo.
 
 ## 3. Funcionalidades
 
-### Ingreso con tres perfiles
+### Login con tres perfiles
 
-La app tiene un login validado por el microservicio de usuarios. Cada perfil ve su propio menú y sus propias acciones, según el diagrama de flujo del caso:
+El login se valida contra el microservicio de usuarios. Según el perfil con que entres cambian el menú y lo que puedes hacer, siguiendo el diagrama de flujo del caso.
 
-| Perfil | Correo | Clave | Qué puede hacer |
+| Perfil | Correo | Clave | Qué hace |
 |---|---|---|---|
-| Ejecutivo comercial | `ejecutivo@example.com` | `Demo2026` | Registrar oportunidades (evento, organización, contacto, detalles y fecha), escanear un QR que deja la oportunidad registrada, registrar gestiones y propuestas enviadas. |
-| Supervisor comercial | `supervisor@example.com` | `Demo2026` | Ver la lista de oportunidades con búsqueda y filtros, revisar el detalle y el seguimiento, gestionar el estado (Pendiente, En gestión, Confirmada, Descartada), asignar responsable, cambiar la prioridad y eliminar oportunidades. |
-| Gestión de activaciones | `activaciones@example.com` | `Demo2026` | Coordinar la activación (confirmar participación, registrar condiciones, asignar responsable, agregar evidencias con foto) y registrar resultados (resultado, observaciones y próximas acciones). |
+| Ejecutivo comercial | `ejecutivo@example.com` | `Demo2026` | Registra oportunidades (evento, organización, contacto, detalle y fecha), puede escanear un QR para registrar una oportunidad de inmediato y anota las gestiones y propuestas enviadas. |
+| Supervisor comercial | `supervisor@example.com` | `Demo2026` | Ve la lista de oportunidades con búsqueda y filtros, revisa el detalle y el seguimiento, cambia el estado (Pendiente, En gestión, Confirmada, Descartada), asigna responsable, cambia la prioridad y puede eliminar. |
+| Gestión de activaciones | `activaciones@example.com` | `Demo2026` | Coordina la activación: confirma la participación, anota las condiciones, asigna responsable y sube fotos de evidencia. Al final registra el resultado, las observaciones y las próximas acciones. |
 
-En el login hay un botón por cada cuenta de prueba que completa el correo. Para **cerrar sesión o cambiar de perfil** se usa el ícono de salida en la barra superior de Inicio o el botón "Cerrar sesión / Cambiar perfil" en Perfil. Ambos vuelven al login.
+Para no tener que escribir los correos, en el login hay un botón por cada cuenta de prueba. Para salir o cambiar de perfil está el ícono de salida arriba en Inicio, o el botón "Cerrar sesión / Cambiar perfil" en Perfil. Los dos te devuelven al login.
 
-Si el microservicio de usuarios no está disponible, la app permite entrar con las mismas cuentas de prueba e informa que el ingreso es sin conexión.
+Si el microservicio de usuarios está apagado igual se puede entrar con las cuentas de prueba, y la app avisa que el ingreso fue sin conexión.
 
-### Otras funciones
+### Otras cosas que tiene
 
-- Avisos de eventos próximos, contactos pendientes, propuestas sin respuesta y seguimientos atrasados (pestaña Pendientes).
-- Historial de cada oportunidad, incluidos los cambios de estado.
-- Organizaciones y contactos ficticios.
-- Lectura de códigos QR con CameraX y ML Kit.
-- Feriados de Chile obtenidos desde una API externa, con aviso si un evento registrado cae en un feriado.
-- Preferencia de avisos guardada con DataStore y foto de perfil con cámara o galería.
+- Pestaña Pendientes con avisos de eventos que se acercan, contactos pendientes, propuestas sin respuesta y seguimientos atrasados.
+- Historial por oportunidad, donde quedan también los cambios de estado.
+- Organizaciones y contactos de ejemplo.
+- Lector de códigos QR con CameraX y ML Kit.
+- Pantalla de feriados de Chile (API externa). Si un evento cae en feriado, la app lo avisa.
+- La preferencia de avisos se guarda con DataStore, y la foto de perfil se puede sacar con la cámara o elegir de la galería.
 
-### Datos: microservicio y Room
+### Dónde se guardan los datos
 
-- Las **oportunidades** se crean, consultan, modifican, cambian de estado y eliminan en el microservicio `ms-oportunidades` (CRUD completo). Cada respuesta se guarda también en Room, así que si se pierde la conexión la app sigue mostrando la última información descargada.
-- **Organizaciones, contactos, gestiones, activaciones y resultados** se guardan en Room, igual que en el diagrama del caso.
-- La **API externa** (feriados) se muestra en su propia pantalla y no se mezcla con los datos propios.
+Las oportunidades viven en el microservicio `ms-oportunidades`, que tiene el CRUD completo: crear, consultar, editar, cambiar estado y eliminar. Lo que responde el servidor también se copia en Room, así que si se cae la conexión la app sigue mostrando lo último que descargó.
+
+Organizaciones, contactos, gestiones, activaciones y resultados se guardan solo en Room, igual que en el diagrama del caso.
+
+Los feriados (la API externa) tienen su propia pantalla y no se mezclan con nuestros datos.
 
 ### Códigos QR de prueba
 
-En la carpeta `qr/` hay 3 códigos, cada uno con una oportunidad ficticia. Junto a cada imagen hay un `.txt` con el mismo contenido:
+En la carpeta `qr/` dejamos 3 códigos, cada uno con una oportunidad inventada. Al lado de cada imagen hay un `.txt` con el mismo contenido por si se quiere revisar.
 
 - `qr_1_feria_empresarial.png`
 - `qr_2_jornada_beneficios.png`
 - `qr_3_actividad_municipal.png`
 
-Para usarlos, ingresa como ejecutivo comercial, presiona "Escanear QR de oportunidad", enfoca el código y presiona **Registrar oportunidad**:
-
-1. Si la organización del código no existe, se crea.
-2. La oportunidad se guarda en el microservicio.
-3. La app muestra el resumen.
-
-Con "Revisar en el formulario" se pueden ver y editar los datos antes de guardar.
+Para probarlos hay que entrar como ejecutivo comercial, tocar "Escanear QR de oportunidad", apuntar al código y tocar "Registrar oportunidad". Si la organización del QR no existe la app la crea, después guarda la oportunidad en el microservicio y muestra un resumen. Si prefieres revisar los datos antes de guardar, usa "Revisar en el formulario".
 
 ## 4. Endpoints utilizados
 
 ### Microservicios propios (carpeta `microservicios/`)
 
-Desde el emulador, la app usa `http://10.0.2.2` para llegar al computador.
+Desde el emulador la app llega al computador por `http://10.0.2.2`.
 
-**ms-usuarios** (puerto 8081, base de datos H2):
+ms-usuarios, puerto 8081, base de datos H2:
 
-| Método | Endpoint | Uso en la app |
+| Método | Endpoint | Para qué se usa |
 |---|---|---|
-| POST | `/api/usuarios/login` | Inicio de sesión y obtención del perfil |
-| GET | `/api/usuarios` | Listado de usuarios |
-| GET | `/api/usuarios/{id}` | Consulta de un usuario |
-| POST | `/api/usuarios` | Creación de usuario |
-| PUT | `/api/usuarios/{id}` | Modificación de usuario |
-| DELETE | `/api/usuarios/{id}` | Eliminación de usuario |
+| POST | `/api/usuarios/login` | Login, devuelve el perfil |
+| GET | `/api/usuarios` | Listar usuarios |
+| GET | `/api/usuarios/{id}` | Ver un usuario |
+| POST | `/api/usuarios` | Crear usuario |
+| PUT | `/api/usuarios/{id}` | Editar usuario |
+| DELETE | `/api/usuarios/{id}` | Eliminar usuario |
 
-**ms-oportunidades** (puerto 8082, base de datos H2):
+ms-oportunidades, puerto 8082, base de datos H2:
 
-| Método | Endpoint | Uso en la app |
+| Método | Endpoint | Para qué se usa |
 |---|---|---|
 | GET | `/api/oportunidades` | Lista de oportunidades (botón "Actualizar desde el servidor") |
-| GET | `/api/oportunidades/{id}` | Consulta de una oportunidad |
-| POST | `/api/oportunidades` | Registrar oportunidad (formulario o QR) |
-| PUT | `/api/oportunidades/{id}` | Editar oportunidad y decisión del supervisor |
-| PATCH | `/api/oportunidades/{id}/estado` | Confirmar participación desde Coordinar activación |
-| DELETE | `/api/oportunidades/{id}` | Eliminar oportunidad (supervisor) |
+| GET | `/api/oportunidades/{id}` | Ver una oportunidad |
+| POST | `/api/oportunidades` | Registrar oportunidad, desde el formulario o desde un QR |
+| PUT | `/api/oportunidades/{id}` | Editar la oportunidad y guardar la decisión del supervisor |
+| PATCH | `/api/oportunidades/{id}/estado` | Confirmar participación en Coordinar activación |
+| DELETE | `/api/oportunidades/{id}` | Eliminar oportunidad (solo supervisor) |
 
-Las consolas H2 quedan en `http://localhost:8081/h2-console` y `http://localhost:8082/h2-console`. El detalle de cada endpoint, con ejemplos JSON, está en `microservicios/README.md`.
+La consola H2 de cada servicio está en `http://localhost:8081/h2-console` y `http://localhost:8082/h2-console`. En `microservicios/README.md` está el detalle de cada endpoint con ejemplos de JSON.
 
 ### API externa
 
-| Método | Endpoint | Uso en la app |
+| Método | Endpoint | Para qué se usa |
 |---|---|---|
-| GET | `https://date.nager.at/api/v3/PublicHolidays/{año}/CL` | Pantalla "Feriados de Chile" (año actual y siguiente) |
+| GET | `https://date.nager.at/api/v3/PublicHolidays/{año}/CL` | Pantalla "Feriados de Chile", con el año actual y el siguiente |
 
 ## 5. Pasos para ejecutar
 
 ### Microservicios
 
-1. Tener Java 21 o superior.
-2. En una terminal, ejecutar el servicio de usuarios:
-   ```
-   cd microservicios/ms-usuarios
-   mvnw spring-boot:run
-   ```
-3. En otra terminal, ejecutar el servicio de oportunidades:
-   ```
-   cd microservicios/ms-oportunidades
-   mvnw spring-boot:run
-   ```
-   En PowerShell se escribe `.\mvnw spring-boot:run`. La primera vez se descarga Maven automáticamente.
-4. Comprobar que responden: http://localhost:8081/api/usuarios y http://localhost:8082/api/oportunidades.
+Se necesita Java 21 o más nuevo. Cada servicio va en su propia terminal.
+
+```
+cd microservicios/ms-usuarios
+mvnw spring-boot:run
+```
+
+```
+cd microservicios/ms-oportunidades
+mvnw spring-boot:run
+```
+
+En PowerShell hay que escribir `.\mvnw spring-boot:run`. La primera vez se demora un poco más porque descarga Maven. Para saber si quedaron arriba, abre http://localhost:8081/api/usuarios y http://localhost:8082/api/oportunidades en el navegador; si sale un JSON, están funcionando.
 
 ### App móvil
 
 1. Abrir la carpeta del proyecto en Android Studio.
-2. En Settings > Build Tools > Gradle, usar el JDK 21 (Gradle JDK).
-3. Sincronizar Gradle e instalar el SDK 37 si se solicita.
-4. Iniciar un emulador con Android 13 (API 33) o superior (probado con Pixel 7, API 34).
-5. Seleccionar el módulo `app` y presionar Run.
-6. Al abrir la app en Android 17 o superior, aceptar el permiso de dispositivos cercanos / red local. Sin ese permiso la app no puede llegar a los microservicios y entra en modo sin conexión.
-7. Ingresar con una de las cuentas de prueba.
+2. En Settings > Build Tools > Gradle, dejar el Gradle JDK en 21.
+3. Sincronizar Gradle. Si pide instalar el SDK 37, aceptar.
+4. Levantar un emulador con Android 13 (API 33) o superior. Nosotros probamos con un Pixel 7 (API 34) y un Pixel 5 con Android 17.
+5. Elegir el módulo `app` y darle a Run.
+6. En Android 17 o superior la app pide permiso de dispositivos cercanos / red local al abrirse. Hay que aceptarlo, porque sin ese permiso Android no la deja conectarse a los microservicios y entra en modo sin conexión.
+7. Entrar con alguna de las cuentas de prueba.
 
-Para usar un teléfono físico, en `remote/RetrofitInstance.kt` cambia `HOST` por la IP del computador en la misma red Wi-Fi, por ejemplo `http://192.168.1.10`. También hay que permitir los puertos 8081 y 8082 en el firewall de Windows.
+Para probar en un teléfono físico hay que cambiar `HOST` en `remote/RetrofitInstance.kt` por la IP del computador (por ejemplo `http://192.168.1.10`), con el teléfono y el PC en la misma red Wi-Fi. También hay que abrir los puertos 8081 y 8082 en el firewall de Windows.
 
 ### Pruebas unitarias
 
-- Las pruebas de lógica están en `app/src/test/java` y usan Kotest, JUnit 5, MockK y kotlinx-coroutines-test. Cubren todos los ViewModel de la lógica y los Repository.
-- La prueba de interfaz está en `app/src/androidTest/java` y usa Compose UI Test con MockK.
-- Para ejecutarlas, en Android Studio haz clic derecho en la carpeta de pruebas y elige "Run 'Tests in ...'". Para ver la cobertura, usa "Run with Coverage".
-- Los microservicios tienen sus pruebas de servicio con JUnit 5 y Mockito. Se ejecutan con `mvnw test`.
+Las pruebas de la lógica están en `app/src/test/java`. Usamos Kotest, JUnit 5, MockK y kotlinx-coroutines-test, y cubren los ViewModel y los Repository. En `app/src/androidTest/java` hay además una prueba de interfaz con Compose UI Test y MockK.
+
+Para correrlas en Android Studio: clic derecho en la carpeta de pruebas y "Run 'Tests in ...'". Si se quiere ver la cobertura, la opción es "Run with Coverage".
+
+Los microservicios tienen sus propias pruebas de la capa de servicio con JUnit 5 y Mockito. Se corren con `mvnw test` dentro de la carpeta de cada uno.
 
 ## 6. APK firmado y llave
 
-- Llave: `keystore/oportunidades.jks`. El alias es `oportunidades` y la clave del almacén y de la llave es `Oportunidades2026` (proyecto académico).
-- La configuración de firma está en `app/build.gradle.kts`, en `signingConfigs` → `release`.
-- Para generar el APK: Build > Generate Signed App Bundle or APK > APK, con la misma llave. También se puede ejecutar `gradlew assembleRelease`.
-- El APK firmado queda en `app/build/outputs/apk/release/app-release.apk`. Hay una copia en `apk/app-release.apk`.
+La llave está en `keystore/oportunidades.jks`, con alias `oportunidades`. La clave del almacén y de la llave es `Oportunidades2026` (la dejamos acá porque es un proyecto académico).
+
+La configuración de firma está en `app/build.gradle.kts`, dentro de `signingConfigs` → `release`.
+
+Para generar el APK usamos Build > Generate Signed App Bundle or APK > APK, con esa misma llave. También sirve `gradlew assembleRelease`. El APK queda en `app/build/outputs/apk/release/app-release.apk` y dejamos una copia en `apk/app-release.apk`.
 
 Capturas:
 
 ![APK firmado](docs/capturas/apk_firmado.png)
 ![Llave .jks](docs/capturas/llave_jks.png)
 
-## Organización del código
+## Cómo está ordenado el código
 
-Sigue la estructura MVVM de las guías del curso:
+Seguimos la misma estructura MVVM de las guías del curso:
 
-| Carpeta | Contenido |
+| Carpeta | Qué hay |
 |---|---|
-| `model` | Estados de formularios (UiState), errores, catálogos, fechas y modelos de la API (Usuario, Feriado) |
-| `model/data/local` | Entidades, DAO y base Room |
-| `remote` | `RetrofitInstance` y las interfaces de los servicios (usuarios, oportunidades, feriados) |
-| `repository` | Un repositorio por fuente de datos. Los ViewModel los reciben por constructor, lo que permite simularlos en las pruebas. |
-| `viewmodel` | Estado, validaciones (`validarFormulario`), guardado y eventos de navegación |
-| `navigation` | Rutas y conexión entre pantallas según el perfil |
-| `ui` | Pantallas, componentes, tema y lector QR |
+| `model` | Estados de los formularios (UiState), errores, catálogos, fechas y los modelos que vienen de las APIs (Usuario, Feriado) |
+| `model/data/local` | Entidades, DAO y la base de datos Room |
+| `remote` | `RetrofitInstance` y las interfaces de cada servicio (usuarios, oportunidades, feriados) |
+| `repository` | Un repositorio por cada fuente de datos. Los ViewModel los reciben por constructor, así en las pruebas los podemos reemplazar por mocks. |
+| `viewmodel` | Estado de cada pantalla, validaciones (`validarFormulario`), guardado y eventos de navegación |
+| `navigation` | Rutas y qué pantallas ve cada perfil |
+| `ui` | Pantallas, componentes, tema y el lector QR |
 
 ## Planificación
 
